@@ -75,7 +75,7 @@ export interface ChatMessage {
 
 export type AppTab = 'discover' | 'standouts' | 'likes' | 'matches' | 'chat' | 'profile';
 
-export type BandwidthStatus = 'ready' | 'focusing' | 'weekend' | 'new_vibes';
+
 
 export type VibeSyncLabel = 'Shared Conversation Style' | 'Fast-Paced Match' | 'Both Thoughtful Sharers' | 'Deep Common Ground';
 
