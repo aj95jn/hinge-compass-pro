@@ -413,13 +413,6 @@ const Index = () => {
             profile={state.userProfile}
             isPaid={state.isPaid}
             onUpdateProfile={state.updateUserProfile}
-            onUpdateBandwidth={(status) => {
-              state.updateUserProfile({ bandwidthStatus: status });
-              state.setUserBandwidth(status);
-            }}
-            onToggleBandwidthVisible={(visible) => {
-              state.updateUserProfile({ bandwidthVisible: visible });
-            }}
             onViewWhatsNew={markWhatsNewSeen}
           />
         )}

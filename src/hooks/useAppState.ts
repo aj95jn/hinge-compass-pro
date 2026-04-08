@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { AppTab, Like, Match, ChatMessage, BandwidthStatus, GlowResult, Profile } from '@/types';
+import { AppTab, Like, Match, ChatMessage, GlowResult, Profile } from '@/types';
 import {
   discoverProfiles,
   initialLikesReceived,
@@ -25,7 +25,7 @@ export function useAppState() {
   const [likesRemaining, setLikesRemaining] = useState(FREE_LIKE_LIMIT);
   const [rosesRemaining, setRosesRemaining] = useState(1);
   const [isPaid] = useState(false);
-  const [userBandwidth, setUserBandwidth] = useState<BandwidthStatus | undefined>(undefined);
+  
   const [showRefundPopup, setShowRefundPopup] = useState<{ profileName: string; likeTimestamp: number } | null>(null);
   const [activeChatMatchId, setActiveChatMatchId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<Profile>(initialUserProfile);
@@ -309,8 +309,6 @@ export function useAppState() {
     likesRemaining,
     rosesRemaining,
     isPaid,
-    userBandwidth,
-    setUserBandwidth,
     userProfile,
     updateUserProfile,
     showRefundPopup,
