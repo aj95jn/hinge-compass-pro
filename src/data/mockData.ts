@@ -28,7 +28,7 @@ export const userProfile: Profile = {
     { id: 'up3', question: 'My simple pleasures', answer: 'Cooking a new recipe from scratch, long hikes, and vinyl records on a Sunday.', interests: ['cooking', 'hiking', 'music'] },
   ],
   preferences: ['travel', 'philosophy', 'cooking', 'hiking', 'music', 'deep-conversations', 'entrepreneurship', 'food', 'outdoors'],
-  bandwidthStatus: undefined,
+  
   vibeData: { avgMessageLength: 4, avgReplyTimeMinutes: 0.5, profileReadTimeSec: 20 },
 };
 
@@ -47,7 +47,7 @@ export const discoverProfiles: Profile[] = [
       { id: 'p3', question: 'I\'m weirdly attracted to', answer: 'People who can cook a full meal from whatever\'s left in the fridge. That\'s a superpower.', interests: ['cooking', 'food', 'humor'] },
     ],
     preferences: ['travel', 'philosophy', 'cooking', 'adventure'],
-    bandwidthStatus: 'focusing', bandwidthVisible: true,
+    
     showVibeSync: true, vibeSyncVisible: true, vibeSyncLabel: 'Shared Conversation Style',
     vibeData: { avgMessageLength: 4, avgReplyTimeMinutes: 0.5, profileReadTimeSec: 25 },
     coreValues: ['travel', 'philosophy', 'deep-conversations'],
@@ -65,7 +65,7 @@ export const discoverProfiles: Profile[] = [
       { id: 'p6', question: 'A boundary of mine is', answer: 'No phones at dinner. If the food\'s good and the company\'s better, the screen can wait.', interests: ['mindfulness', 'food', 'deep-conversations'] },
     ],
     preferences: ['books', 'yoga', 'art', 'wellness'],
-    bandwidthStatus: 'weekend', bandwidthVisible: true,
+    
     showVibeSync: false, vibeSyncVisible: false,
     vibeData: { avgMessageLength: 2, avgReplyTimeMinutes: 30, profileReadTimeSec: 30 },
     vitals: { age: 25, gender: 'Woman', orientation: 'Bisexual' },
@@ -82,7 +82,6 @@ export const discoverProfiles: Profile[] = [
       { id: 'p9', question: 'After work you can find me', answer: 'At whatever dive bar has the best jukebox. Bonus points if they serve tater tots.', interests: ['music', 'nightlife', 'food'] },
     ],
     preferences: ['music', 'nightlife', 'fashion', 'humor'],
-    bandwidthVisible: false,
     showVibeSync: true, vibeSyncVisible: true, vibeSyncLabel: 'Fast-Paced Match',
     vitals: { age: 26, gender: 'Woman', orientation: 'Straight', ethnicity: 'Mixed', datingGoals: 'Looking for a relationship', relationshipType: 'Monogamy' },
     vibeData: { avgMessageLength: 5, avgReplyTimeMinutes: 0.3, profileReadTimeSec: 18 },
@@ -98,7 +97,6 @@ export const discoverProfiles: Profile[] = [
       { id: 'sp3', question: 'Dating me is like', answer: 'Getting a personal tour guide to every hidden gem in the city. I know places Google doesn\'t.', interests: ['adventure', 'travel', 'exploration'] },
     ],
     preferences: ['wine', 'art', 'music', 'romance'],
-    bandwidthStatus: 'ready', bandwidthVisible: true,
     showVibeSync: true, vibeSyncVisible: true, vibeSyncLabel: 'Deep Common Ground',
     vitals: { age: 29, gender: 'Woman', orientation: 'Straight', religion: 'Spiritual', politics: 'Liberal' },
     vibeData: { avgMessageLength: 5, avgReplyTimeMinutes: 0.8, profileReadTimeSec: 22 },
@@ -116,7 +114,6 @@ export const discoverProfiles: Profile[] = [
     ],
     preferences: ['food', 'music', 'tech', 'humor'],
     vitals: { age: 24, gender: 'Woman', orientation: 'Straight' },
-    bandwidthStatus: 'new_vibes', bandwidthVisible: true,
     showVibeSync: false, vibeSyncVisible: false,
     vibeData: { avgMessageLength: 3, avgReplyTimeMinutes: 2 },
   },
@@ -133,7 +130,7 @@ export const discoverProfiles: Profile[] = [
     preferences: ['music', 'dancing', 'volunteering', 'food', 'community'],
     vitals: { age: 28, gender: 'Woman', orientation: 'Queer', ethnicity: 'Black', religion: 'Christian', datingGoals: 'Looking for a relationship' },
     showVibeSync: true, vibeSyncVisible: true, vibeSyncLabel: 'Both Thoughtful Sharers',
-    bandwidthStatus: 'ready', bandwidthVisible: true,
+    
     vibeData: { avgMessageLength: 4, avgReplyTimeMinutes: 0.4, profileReadTimeSec: 28 },
     coreValues: ['food', 'community', 'deep-conversations'],
   },
@@ -149,7 +146,7 @@ export const discoverProfiles: Profile[] = [
     ],
     vitals: { age: 26, gender: 'Woman', orientation: 'Straight', relationshipType: 'Open to options' },
     preferences: ['fitness', 'hiking', 'climbing', 'adventure', 'outdoors'],
-    bandwidthStatus: 'weekend', bandwidthVisible: false,
+    
     showVibeSync: false, vibeSyncVisible: false,
     vibeData: { avgMessageLength: 3, avgReplyTimeMinutes: 5 },
   },
@@ -165,7 +162,7 @@ export const discoverProfiles: Profile[] = [
     ],
     preferences: ['books', 'writing', 'pets', 'deep-conversations'],
     showVibeSync: true, vibeSyncVisible: true, vibeSyncLabel: 'Shared Conversation Style',
-    bandwidthStatus: 'new_vibes', bandwidthVisible: true,
+    
     vibeData: { avgMessageLength: 6, avgReplyTimeMinutes: 0.2, profileReadTimeSec: 35 },
     coreValues: ['deep-conversations', 'philosophy', 'books'],
     vitals: { age: 25, gender: 'Woman', orientation: 'Bisexual', politics: 'Progressive', datingGoals: 'Something serious', relationshipType: 'Monogamy' },
@@ -191,7 +188,6 @@ export const likesReceivedProfiles: Profile[] = [
       { id: 'jp1', question: 'My simple pleasures', answer: 'Coffee shop hopping and people watching.', interests: ['coffee', 'social'] },
     ],
     preferences: ['coffee', 'travel', 'social'],
-    bandwidthStatus: 'ready',
     vibeData: { avgMessageLength: 3, avgReplyTimeMinutes: 1 },
   },
 ];
@@ -213,7 +209,7 @@ export const matchProfiles: Profile[] = [
     ],
     prompts: [],
     preferences: ['hiking', 'outdoors', 'travel'],
-    bandwidthStatus: 'ready',
+    
     vibeData: { avgMessageLength: 3, avgReplyTimeMinutes: 5 },
   },
 ];

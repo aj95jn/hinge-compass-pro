@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Edit3, Plus, X, Sparkles, Zap, Info } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { AnimatedAvatar } from './AnimatedAvatar';
-import { Profile, BandwidthStatus, VibeSyncLabel } from '@/types';
-import { BandwidthStatusPill } from './BandwidthStatus';
+import { Profile, VibeSyncLabel } from '@/types';
 import { FeaturesWalkthrough } from './FeaturesWalkthrough';
 
 const ALL_INTERESTS = [
@@ -19,33 +18,16 @@ interface UserProfileScreenProps {
   profile: Profile;
   isPaid?: boolean;
   onUpdateProfile: (updates: Partial<Profile>) => void;
-  onUpdateBandwidth: (status: BandwidthStatus) => void;
-  onToggleBandwidthVisible: (visible: boolean) => void;
   onViewWhatsNew?: () => void;
 }
 
-export function UserProfileScreen({ profile, isPaid = false, onUpdateProfile, onUpdateBandwidth, onToggleBandwidthVisible, onViewWhatsNew }: UserProfileScreenProps) {
+export function UserProfileScreen({ profile, isPaid = false, onUpdateProfile, onViewWhatsNew }: UserProfileScreenProps) {
   const [editingPrompt, setEditingPrompt] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [showInterestPicker, setShowInterestPicker] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'features'>('profile');
-  const [showBandwidthInfo, setShowBandwidthInfo] = useState(false);
   const [showVibeSyncInfo, setShowVibeSyncInfo] = useState(false);
-  const bandwidthInfoRef = useRef<HTMLDivElement>(null);
   const vibeSyncInfoRef = useRef<HTMLDivElement>(null);
-
-  // Auto-dismiss after 8s and click-outside for bandwidth
-  useEffect(() => {
-    if (!showBandwidthInfo) return;
-    const timer = setTimeout(() => setShowBandwidthInfo(false), 8000);
-    const handleClickOutside = (e: MouseEvent) => {
-      if (bandwidthInfoRef.current && !bandwidthInfoRef.current.contains(e.target as Node)) {
-        setShowBandwidthInfo(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => { clearTimeout(timer); document.removeEventListener('mousedown', handleClickOutside); };
-  }, [showBandwidthInfo]);
 
   // Auto-dismiss after 8s and click-outside for vibe sync
   useEffect(() => {
@@ -76,12 +58,6 @@ export function UserProfileScreen({ profile, isPaid = false, onUpdateProfile, on
     onUpdateProfile({ preferences: updated });
   };
 
-  const bandwidthOptions: { value: BandwidthStatus; label: string }[] = [
-    { value: 'ready', label: 'Ready to Connect' },
-    { value: 'focusing', label: 'Focusing on Matches' },
-    { value: 'weekend', label: 'Weekend Spark ✨' },
-    { value: 'new_vibes', label: 'Open to New Vibes' },
-  ];
 
   return (
     <div className="pb-24">
@@ -130,86 +106,9 @@ export function UserProfileScreen({ profile, isPaid = false, onUpdateProfile, on
       {activeTab === 'features' ? (
         <FeaturesWalkthrough
           isPaid={isPaid}
-          bandwidthVisible={profile.bandwidthVisible ?? false}
-          bandwidthStatus={profile.bandwidthStatus}
-          onToggleBandwidthVisible={onToggleBandwidthVisible}
-          onUpdateBandwidth={onUpdateBandwidth}
         />
       ) : (
         <div className="px-4">
-          {/* Bandwidth Status */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5 relative">
-                <h3 className="text-sm font-semibold text-foreground">Your Bandwidth Status</h3>
-                <button
-                  onClick={() => setShowBandwidthInfo(!showBandwidthInfo)}
-                  onMouseEnter={() => setShowBandwidthInfo(true)}
-                  onMouseLeave={() => setShowBandwidthInfo(false)}
-                  className="p-0.5 rounded-full hover:bg-muted transition-colors"
-                >
-                  <Info size={14} className="text-muted-foreground" />
-                </button>
-
-                {/* Info popup */}
-                <AnimatePresence>
-                  {showBandwidthInfo && (
-                    <motion.div
-                      ref={bandwidthInfoRef}
-                      initial={{ opacity: 0, scale: 0.9, y: -4 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, y: -4 }}
-                      className="absolute bottom-7 left-0 z-50 w-64 bg-card rounded-xl p-3 shadow-lg border border-border"
-                    >
-                      <button
-                        onClick={() => setShowBandwidthInfo(false)}
-                        className="absolute top-2 right-2 p-0.5 rounded-full hover:bg-muted transition-colors"
-                      >
-                        <X size={12} className="text-muted-foreground" />
-                      </button>
-                      <p className="font-semibold text-foreground text-xs mb-1">What is Bandwidth?</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">
-                        Bandwidth lets others know how available you are to chat. Choose a status and make it visible on your profile so matches can see when you're most responsive.
-                      </p>
-                      {/* Arrow pointing up */}
-                      <div className="absolute -bottom-[5px] left-[90px] w-2.5 h-2.5 bg-card border-r border-b border-border rotate-45" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">{profile.bandwidthVisible ? 'Public' : 'Private'}</span>
-                <Switch
-                  checked={profile.bandwidthVisible}
-                  onCheckedChange={(checked) => onToggleBandwidthVisible(checked)}
-                />
-              </div>
-            </div>
-            {!profile.bandwidthVisible && (
-              <p className="text-[11px] text-muted-foreground mb-3">
-                Your status is hidden. Toggle to make it visible on your profile.
-              </p>
-            )}
-            <div className={`flex flex-wrap gap-2 ${!profile.bandwidthVisible ? 'opacity-50' : ''}`}>
-              {bandwidthOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => {
-                    onUpdateBandwidth(opt.value);
-                    
-                  }}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    profile.bandwidthStatus === opt.value
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-accent'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Vibe Sync */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">

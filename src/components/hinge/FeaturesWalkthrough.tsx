@@ -1,14 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Sparkles, Heart, Undo2, Crown } from 'lucide-react';
-import { BandwidthStatus } from '@/types';
 
 interface FeaturesWalkthroughProps {
   isPaid: boolean;
-  bandwidthVisible?: boolean;
-  bandwidthStatus?: BandwidthStatus;
-  onToggleBandwidthVisible?: (visible: boolean) => void;
-  onUpdateBandwidth?: (status: BandwidthStatus) => void;
 }
 
 /* Matching the interlocking-circles icon from VibeSync.tsx */
@@ -25,18 +20,6 @@ function VibeSyncIcon({ size = 28 }: { size?: number }) {
   );
 }
 
-/* Matching the person-with-signal-waves SVG from BandwidthStatus.tsx */
-function BandwidthIcon({ size = 28 }: { size?: number }) {
-  const scale = size / 18;
-  return (
-    <svg width={size} height={size} viewBox="0 0 18 14" fill="none">
-      <circle cx="6" cy="5" r={2 * scale * 0.6} fill="currentColor" />
-      <path d={`M3 11C3 8.8 4.3 7.5 6 7.5C7.7 7.5 9 8.8 9 11`} stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-      <path d="M11 7C12 5.8 12 4.2 11 3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.5" />
-      <path d="M13.5 8.5C15 6.5 15 3.5 13.5 1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.35" />
-    </svg>
-  );
-}
 
 const FEATURES = [
   {
@@ -100,18 +83,6 @@ const FEATURES = [
         )}
       </div>
     ),
-  },
-  {
-    id: 'bandwidth',
-    title: 'Bandwidth',
-    icon: (
-      <span className="text-primary">
-        <BandwidthIcon size={28} />
-      </span>
-    ),
-    freeTag: '',
-    paidTag: '',
-    visual: null, // rendered inline with props
   },
   {
     id: 'bridge-builder',
@@ -223,14 +194,8 @@ const FEATURES = [
   },
 ];
 
-const BANDWIDTH_OPTIONS: { value: BandwidthStatus; label: string; desc: string }[] = [
-  { value: 'ready', label: 'Ready to Connect', desc: 'Open & active' },
-  { value: 'focusing', label: 'Focusing on Matches', desc: 'Currently busy' },
-  { value: 'weekend', label: 'Weekend Spark ✨', desc: 'Weekend only' },
-  { value: 'new_vibes', label: 'Open to New Vibes', desc: 'Exploring' },
-];
 
-export function FeaturesWalkthrough({ isPaid, bandwidthVisible = false, bandwidthStatus, onToggleBandwidthVisible, onUpdateBandwidth }: FeaturesWalkthroughProps) {
+export function FeaturesWalkthrough({ isPaid }: FeaturesWalkthroughProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -244,58 +209,6 @@ export function FeaturesWalkthrough({ isPaid, bandwidthVisible = false, bandwidt
   const prev = () => goTo((currentIndex - 1 + FEATURES.length) % FEATURES.length);
   const next = () => goTo((currentIndex + 1) % FEATURES.length);
 
-  const renderBandwidthVisual = () => (
-    <div className="flex flex-col items-center gap-3 w-full">
-      {/* Explanation */}
-      <p className="text-[11px] text-muted-foreground text-center max-w-[240px] mb-1">
-        Shows how available someone is to chat — set yours and see others' at a glance.
-      </p>
-
-      {/* Example badges with tooltips — same style as Vibe Sync */}
-      <div className="flex flex-col items-center gap-5 w-full max-w-[280px]">
-        {[
-          { label: 'Ready to Connect', desc: 'Open & active today' },
-          { label: 'Focusing on Matches', desc: 'Busy with other chats' },
-          { label: 'Weekend Spark ✨', desc: 'More active on weekends' },
-          { label: 'Open to New Vibes', desc: 'New & ready to meet' },
-        ].map((badge, i) => (
-          <motion.div
-            key={badge.label}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.15 * i, type: 'spring' }}
-            className="flex flex-col items-center gap-1.5"
-          >
-            {/* Blinking tooltip box on top */}
-            <motion.div
-              className="relative bg-foreground rounded-md px-2 py-1 shadow-sm"
-              animate={{ opacity: [0, 1, 1, 0] }}
-              transition={{ duration: 4, times: [0, 0.1, 0.75, 1], repeat: Infinity, delay: i * 1.5 }}
-            >
-              <p className="text-[8px] font-medium text-background leading-tight">{badge.desc}</p>
-              <div className="absolute left-1/2 -translate-x-1/2 -bottom-[3px] w-1.5 h-1.5 bg-foreground rotate-45" />
-            </motion.div>
-            {/* Badge pill */}
-            <div className="inline-flex items-center gap-1.5 bg-purple-900 rounded-full px-3 py-1.5 shadow-[0_2px_8px_-2px_rgba(76,29,149,0.4)]">
-              <svg width="14" height="12" viewBox="0 0 18 14" fill="none" className="shrink-0">
-                <circle cx="6" cy="5" r="2" fill="white" />
-                <path d="M3 11C3 8.8 4.3 7.5 6 7.5C7.7 7.5 9 8.8 9 11" stroke="white" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-                <path d="M11 7C12 5.8 12 4.2 11 3" stroke="white" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.5" />
-                <path d="M13.5 8.5C15 6.5 15 3.5 13.5 1.5" stroke="white" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.35" />
-              </svg>
-              <span className="text-[10px] font-bold text-white whitespace-nowrap">{badge.label}</span>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Nudge to set in profile */}
-      <p className="text-[10px] text-muted-foreground text-center mt-1 italic">
-        Set your bandwidth status in your Profile tab.
-      </p>
-
-    </div>
-  );
 
   return (
     <div className="px-4 pt-2 pb-24">
@@ -327,10 +240,10 @@ export function FeaturesWalkthrough({ isPaid, bandwidthVisible = false, bandwidt
             )}
 
             {/* Visual Demo */}
-            {feature.id === 'bandwidth' ? renderBandwidthVisual() : feature.visual?.(isPaid)}
+            {feature.visual?.(isPaid)}
 
             {/* Upgrade CTA for free */}
-            {!isPaid && feature.id !== 'bandwidth' && (
+            {!isPaid && (
               <button
                 onClick={() => setShowUpgradeModal(true)}
                 className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-foreground text-background text-xs font-semibold hover:opacity-90 transition-opacity"

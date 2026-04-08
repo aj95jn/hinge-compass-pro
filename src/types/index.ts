@@ -28,8 +28,6 @@ export interface Profile {
   photos: { url: string; tags?: string[] }[];
   prompts: Prompt[];
   preferences: string[]; // user's interests/preferences
-  bandwidthStatus?: BandwidthStatus;
-  bandwidthVisible?: boolean;
   showVibeSync?: boolean; // whether to show vibe sync badge
   vibeSyncVisible?: boolean; // whether vibe sync is public on profile
   vibeSyncLabel?: VibeSyncLabel; // selected vibe sync option
@@ -77,7 +75,7 @@ export interface ChatMessage {
 
 export type AppTab = 'discover' | 'standouts' | 'likes' | 'matches' | 'chat' | 'profile';
 
-export type BandwidthStatus = 'ready' | 'focusing' | 'weekend' | 'new_vibes';
+
 
 export type VibeSyncLabel = 'Shared Conversation Style' | 'Fast-Paced Match' | 'Both Thoughtful Sharers' | 'Deep Common Ground';
 

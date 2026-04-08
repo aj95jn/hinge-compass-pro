@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, X, Sparkles, MoreHorizontal, Undo2, CheckCircle } from 'lucide-react';
 import { Profile, VibeSyncResult, GlowResult } from '@/types';
 import { VibeSync } from './VibeSync';
-import { BandwidthStatusPill } from './BandwidthStatus';
 import { LikePanel } from './LikePanel';
 import { ProfileInfoPane } from './ProfileInfoPane';
 
@@ -93,8 +92,7 @@ export function ProfileCard({
             </div>
             {/* Center: badges */}
             <div className="flex flex-col items-center gap-1 flex-1">
-              {profile.bandwidthStatus && profile.bandwidthVisible && <BandwidthStatusPill status={profile.bandwidthStatus} isPaid={isPaid} />}
-              {profile.showVibeSync && profile.vibeSyncVisible && vibeSync.hasSync && <VibeSync result={vibeSync} isPaid={isPaid} />}
+{profile.showVibeSync && profile.vibeSyncVisible && vibeSync.hasSync && <VibeSync result={vibeSync} isPaid={isPaid} />}
             </div>
             {/* Right: back arrow + dots */}
             <div className="flex items-center gap-2 flex-shrink-0">
