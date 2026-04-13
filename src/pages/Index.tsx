@@ -350,6 +350,7 @@ const Index = () => {
                 likesRemaining={state.likesRemaining}
                 rosesRemaining={state.rosesRemaining}
                 isPaid={state.isPaid}
+                bridgeUsesRemaining={state.bridgeUsesRemaining}
                 onLike={handleLikeWithPopup}
                 onSkip={state.skipProfile}
                 onGoBack={state.goBackProfile}
