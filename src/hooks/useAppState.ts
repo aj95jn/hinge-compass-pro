@@ -100,6 +100,7 @@ export function useAppState() {
       setLikesSent((prev) => [...prev, like]);
       if (!isPaid) setLikesRemaining((r) => r - 1);
       if (params.isRose) setRosesRemaining((r) => r - 1);
+      if (params.hadBridgeSuggestion && !isPaid) setBridgeUsesRemaining((r) => Math.max(0, r - 1));
 
       setCurrentProfileIndex((i) => i + 1);
 
