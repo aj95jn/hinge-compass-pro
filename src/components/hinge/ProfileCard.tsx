@@ -20,6 +20,7 @@ interface ProfileCardProps {
     message?: string;
     isRose?: boolean;
     isPriority?: boolean;
+    hadBridgeSuggestion?: boolean;
   }) => boolean;
   onSkip: () => void;
   onGoBack: () => void;
