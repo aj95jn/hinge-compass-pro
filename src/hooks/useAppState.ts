@@ -76,6 +76,7 @@ export function useAppState() {
       message?: string;
       isRose?: boolean;
       isPriority?: boolean;
+      hadBridgeSuggestion?: boolean;
     }) => {
       if (!isPaid && likesRemaining <= 0) {
         toast.error('No likes remaining. Upgrade to send more!');
