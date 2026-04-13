@@ -31,6 +31,7 @@ export function useAppState() {
   const [userProfile, setUserProfile] = useState<Profile>(initialUserProfile);
   const [glowProfilesSeen, setGlowProfilesSeen] = useState<Set<string>>(new Set());
   const [freeRefundUsed, setFreeRefundUsed] = useState(false);
+  const [bridgeUsesRemaining, setBridgeUsesRemaining] = useState(2);
   
   const FREE_GLOW_LIMIT = 2;
 
@@ -315,6 +316,7 @@ export function useAppState() {
     setShowRefundPopup,
     activeChatMatchId,
     setActiveChatMatchId,
+    bridgeUsesRemaining,
     sendLike,
     skipProfile,
     goBackProfile,
