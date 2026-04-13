@@ -94,6 +94,7 @@ const Index = () => {
     message?: string;
     isRose?: boolean;
     isPriority?: boolean;
+    hadBridgeSuggestion?: boolean;
   }) => {
     const result = state.sendLike({
       profileId: state.currentProfile!.id,
@@ -350,6 +351,7 @@ const Index = () => {
                 likesRemaining={state.likesRemaining}
                 rosesRemaining={state.rosesRemaining}
                 isPaid={state.isPaid}
+                bridgeUsesRemaining={state.bridgeUsesRemaining}
                 onLike={handleLikeWithPopup}
                 onSkip={state.skipProfile}
                 onGoBack={state.goBackProfile}

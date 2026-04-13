@@ -60,9 +60,9 @@ export const discoverProfiles: Profile[] = [
       { url: maya2, tags: ['books', 'deep-conversations'] },
     ],
     prompts: [
-      { id: 'p4', question: 'Change my mind about', answer: 'Dog-earing pages. Some of us like our books to look lived-in, not pristine.', interests: ['books', 'humor'] },
+      { id: 'p4', question: 'Change my mind about', answer: 'Dog-earing pages. Some of us like our books to look lived-in, not pristine.', interests: ['books', 'humor'], isBridgeBuilder: true, bridgeGhostText: 'Ok, but what about writing in the margins?' },
       { id: 'p5', question: 'Two truths and a lie', answer: 'I\'ve read War and Peace twice. I once meditated for 10 days straight. I can touch my nose with my tongue.', interests: ['books', 'yoga', 'humor'] },
-      { id: 'p6', question: 'A boundary of mine is', answer: 'No phones at dinner. If the food\'s good and the company\'s better, the screen can wait.', interests: ['mindfulness', 'food', 'deep-conversations'] },
+      { id: 'p6', question: 'A boundary of mine is', answer: 'No phones at dinner. If the food\'s good and the company\'s better, the screen can wait.', interests: ['mindfulness', 'food', 'deep-conversations'], isBridgeBuilder: true, bridgeGhostText: 'Totally agree — what\'s the best dinner you\'ve had phone-free?' },
     ],
     preferences: ['books', 'yoga', 'art', 'wellness'],
     

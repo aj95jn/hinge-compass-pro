@@ -13,12 +13,14 @@ interface ProfileCardProps {
   likesRemaining: number;
   rosesRemaining: number;
   isPaid: boolean;
+  bridgeUsesRemaining: number;
   onLike: (params: {
     targetType: 'photo' | 'prompt';
     targetIndex: number;
     message?: string;
     isRose?: boolean;
     isPriority?: boolean;
+    hadBridgeSuggestion?: boolean;
   }) => boolean;
   onSkip: () => void;
   onGoBack: () => void;
@@ -31,6 +33,7 @@ export function ProfileCard({
   likesRemaining,
   rosesRemaining,
   isPaid,
+  bridgeUsesRemaining,
   onLike,
   onSkip,
   onGoBack,
@@ -53,10 +56,27 @@ export function ProfileCard({
     if (!selectedTarget || selectedTarget.type !== 'prompt') return undefined;
     const prompt = profile.prompts[selectedTarget.index];
     if (!prompt) return undefined;
-    if (isPromptGlowing(prompt.id)) {
+    if (prompt.isBridgeBuilder || isPromptGlowing(prompt.id)) {
       return glowResults.promptGlows[prompt.id]?.ghostText || prompt.bridgeGhostText;
     }
     return undefined;
+  };
+
+  const getBridgeExplanation = () => {
+    if (!selectedTarget || selectedTarget.type !== 'prompt') return undefined;
+    const prompt = profile.prompts[selectedTarget.index];
+    if (!prompt) return undefined;
+    const ghostText = getGhostText();
+    if (!ghostText) return undefined;
+    
+    const sharedInterests = glowResults.promptGlows[prompt.id]?.sharedInterests || [];
+    if (sharedInterests.length > 0) {
+      return `You both mentioned ${sharedInterests.join(' and ')} — this opening style has worked well for similar profiles.`;
+    }
+    if (prompt.isBridgeBuilder) {
+      return `Her profile signals she values genuine curiosity. This opener reflects that.`;
+    }
+    return `Based on shared interests, this opener is tailored to spark a real conversation.`;
   };
 
   return (
@@ -252,14 +272,19 @@ export function ProfileCard({
           {selectedTarget && (
             <LikePanel
               ghostText={getGhostText()}
+              bridgeExplanation={getBridgeExplanation()}
               rosesRemaining={rosesRemaining}
+              bridgeUsesRemaining={bridgeUsesRemaining}
+              isPaid={isPaid}
               onSend={(message, isRose, isPriority) => {
+                const hadBridge = !!getGhostText();
                 const success = onLike({
                   targetType: selectedTarget.type,
                   targetIndex: selectedTarget.index,
                   message: message || undefined,
                   isRose,
                   isPriority,
+                  hadBridgeSuggestion: hadBridge,
                 });
                 if (success) setSelectedTarget(null);
               }}

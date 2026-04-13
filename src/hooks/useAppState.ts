@@ -31,6 +31,7 @@ export function useAppState() {
   const [userProfile, setUserProfile] = useState<Profile>(initialUserProfile);
   const [glowProfilesSeen, setGlowProfilesSeen] = useState<Set<string>>(new Set());
   const [freeRefundUsed, setFreeRefundUsed] = useState(false);
+  const [bridgeUsesRemaining, setBridgeUsesRemaining] = useState(2);
   
   const FREE_GLOW_LIMIT = 2;
 
@@ -75,6 +76,7 @@ export function useAppState() {
       message?: string;
       isRose?: boolean;
       isPriority?: boolean;
+      hadBridgeSuggestion?: boolean;
     }) => {
       if (!isPaid && likesRemaining <= 0) {
         toast.error('No likes remaining. Upgrade to send more!');
@@ -98,6 +100,7 @@ export function useAppState() {
       setLikesSent((prev) => [...prev, like]);
       if (!isPaid) setLikesRemaining((r) => r - 1);
       if (params.isRose) setRosesRemaining((r) => r - 1);
+      if (params.hadBridgeSuggestion && !isPaid) setBridgeUsesRemaining((r) => Math.max(0, r - 1));
 
       setCurrentProfileIndex((i) => i + 1);
 
@@ -315,6 +318,7 @@ export function useAppState() {
     setShowRefundPopup,
     activeChatMatchId,
     setActiveChatMatchId,
+    bridgeUsesRemaining,
     sendLike,
     skipProfile,
     goBackProfile,
