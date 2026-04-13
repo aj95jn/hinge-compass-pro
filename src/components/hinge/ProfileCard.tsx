@@ -277,12 +277,14 @@ export function ProfileCard({
               bridgeUsesRemaining={bridgeUsesRemaining}
               isPaid={isPaid}
               onSend={(message, isRose, isPriority) => {
+                const hadBridge = !!getGhostText();
                 const success = onLike({
                   targetType: selectedTarget.type,
                   targetIndex: selectedTarget.index,
                   message: message || undefined,
                   isRose,
                   isPriority,
+                  hadBridgeSuggestion: hadBridge,
                 });
                 if (success) setSelectedTarget(null);
               }}
