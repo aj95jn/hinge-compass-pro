@@ -13,6 +13,7 @@ interface ProfileCardProps {
   likesRemaining: number;
   rosesRemaining: number;
   isPaid: boolean;
+  bridgeUsesRemaining: number;
   onLike: (params: {
     targetType: 'photo' | 'prompt';
     targetIndex: number;
@@ -31,6 +32,7 @@ export function ProfileCard({
   likesRemaining,
   rosesRemaining,
   isPaid,
+  bridgeUsesRemaining,
   onLike,
   onSkip,
   onGoBack,
