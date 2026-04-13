@@ -94,6 +94,7 @@ const Index = () => {
     message?: string;
     isRose?: boolean;
     isPriority?: boolean;
+    hadBridgeSuggestion?: boolean;
   }) => {
     const result = state.sendLike({
       profileId: state.currentProfile!.id,
