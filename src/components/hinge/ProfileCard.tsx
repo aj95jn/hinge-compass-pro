@@ -5,6 +5,7 @@ import { Profile, VibeSyncResult, GlowResult } from '@/types';
 import { VibeSync } from './VibeSync';
 import { LikePanel } from './LikePanel';
 import { ProfileInfoPane } from './ProfileInfoPane';
+import { LikeWithoutMessageSheet } from './LikeWithoutMessageSheet';
 
 interface ProfileCardProps {
   profile: Profile;
@@ -43,14 +44,17 @@ export function ProfileCard({
     index: number;
   } | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showLikeWithoutMsg, setShowLikeWithoutMsg] = useState(false);
+  const [pendingNoMsgLike, setPendingNoMsgLike] = useState<{
+    type: 'photo' | 'prompt';
+    index: number;
+    isRose: boolean;
+    isPriority: boolean;
+    hadBridge: boolean;
+  } | null>(null);
 
-  const isPromptGlowing = (promptId: string) => {
-    return glowResults.promptGlows[promptId]?.glow ?? false;
-  };
-
-  const isPhotoGlowing = (index: number) => {
-    return glowResults.photoGlows[index]?.glow ?? false;
-  };
+  const isPromptGlowing = (promptId: string) => glowResults.promptGlows[promptId]?.glow ?? false;
+  const isPhotoGlowing = (index: number) => glowResults.photoGlows[index]?.glow ?? false;
 
   const getGhostText = () => {
     if (!selectedTarget || selectedTarget.type !== 'prompt') return undefined;
@@ -79,6 +83,48 @@ export function ProfileCard({
     return `Based on shared interests, this opener is tailored to spark a real conversation.`;
   };
 
+  const handleLikeSend = (message: string, isRose: boolean, isPriority: boolean) => {
+    if (!selectedTarget) return;
+
+    // Like without message nudge
+    if (!message.trim()) {
+      setPendingNoMsgLike({
+        type: selectedTarget.type,
+        index: selectedTarget.index,
+        isRose,
+        isPriority,
+        hadBridge: !!getGhostText(),
+      });
+      setShowLikeWithoutMsg(true);
+      return;
+    }
+
+    const hadBridge = !!getGhostText();
+    const success = onLike({
+      targetType: selectedTarget.type,
+      targetIndex: selectedTarget.index,
+      message: message || undefined,
+      isRose,
+      isPriority,
+      hadBridgeSuggestion: hadBridge,
+    });
+    if (success) setSelectedTarget(null);
+  };
+
+  const confirmNoMsgLike = () => {
+    if (!pendingNoMsgLike) return;
+    const success = onLike({
+      targetType: pendingNoMsgLike.type,
+      targetIndex: pendingNoMsgLike.index,
+      isRose: pendingNoMsgLike.isRose,
+      isPriority: pendingNoMsgLike.isPriority,
+      hadBridgeSuggestion: pendingNoMsgLike.hadBridge,
+    });
+    if (success) setSelectedTarget(null);
+    setShowLikeWithoutMsg(false);
+    setPendingNoMsgLike(null);
+  };
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -89,10 +135,9 @@ export function ProfileCard({
         transition={{ duration: 0.4, ease: 'easeOut' }}
         className="pb-24 relative"
       >
-        {/* Name, gender, badges, and actions — above the image */}
+        {/* Name, gender, badges, and actions */}
         <div className="px-4 pt-4 pb-2">
           <div className="flex items-center justify-between gap-2">
-            {/* Left: name + gender */}
             <div className="min-w-0 flex-shrink-0">
               <div className="flex items-center gap-2">
                 <h1 className="font-hinge-serif text-2xl font-semibold text-foreground">{profile.name}</h1>
@@ -110,20 +155,12 @@ export function ProfileCard({
                 )}
               </div>
             </div>
-            {/* Center: badges */}
             <div className="flex flex-col items-center gap-1 flex-1">
-{profile.showVibeSync && profile.vibeSyncVisible && vibeSync.hasSync && <VibeSync result={vibeSync} isPaid={isPaid} />}
+              {profile.showVibeSync && profile.vibeSyncVisible && vibeSync.hasSync && <VibeSync result={vibeSync} isPaid={isPaid} />}
             </div>
-            {/* Right: back arrow + dots */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
-                onClick={() => {
-                  if (isPaid) {
-                    onGoBack();
-                  } else {
-                    setShowUpgradeModal(true);
-                  }
-                }}
+                onClick={() => { isPaid ? onGoBack() : setShowUpgradeModal(true); }}
                 className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
               >
                 <Undo2 size={20} className="text-muted-foreground" />
@@ -139,31 +176,21 @@ export function ProfileCard({
         <AnimatePresence>
           {showUpgradeModal && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
               onClick={() => setShowUpgradeModal(false)}
             >
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
+                initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
                 className="bg-card rounded-2xl p-6 mx-6 max-w-sm w-full shadow-xl"
                 onClick={(e) => e.stopPropagation()}
               >
                 <h2 className="font-hinge-serif text-xl font-semibold text-foreground mb-2">Go back to a profile?</h2>
                 <p className="text-sm text-muted-foreground mb-5">Upgrade to revisit profiles you've already seen.</p>
                 <div className="flex flex-col gap-2.5">
-                  <button className="w-full py-3 rounded-xl bg-foreground text-background font-semibold text-sm hover:opacity-90 transition-opacity">
-                    Get HingeX
-                  </button>
-                  <button className="w-full py-3 rounded-xl border border-border text-foreground font-semibold text-sm hover:bg-muted transition-colors">
-                    Get Hinge+
-                  </button>
-                  <button onClick={() => setShowUpgradeModal(false)} className="text-sm text-muted-foreground mt-1">
-                    Not now
-                  </button>
+                  <button className="w-full py-3 rounded-xl bg-foreground text-background font-semibold text-sm hover:opacity-90 transition-opacity">Get HingeX</button>
+                  <button className="w-full py-3 rounded-xl border border-border text-foreground font-semibold text-sm hover:bg-muted transition-colors">Get Hinge+</button>
+                  <button onClick={() => setShowUpgradeModal(false)} className="text-sm text-muted-foreground mt-1">Not now</button>
                 </div>
               </motion.div>
             </motion.div>
@@ -214,14 +241,8 @@ export function ProfileCard({
                   />
                 );
                 promptIdx++;
-                
-                // Insert info pane after specified prompt
                 if (!infoPaneInserted && promptIdx > insertInfoPaneAfterIndex && profile.vitals) {
-                  items.push(
-                    <div key="info-pane" className="mt-3">
-                      <ProfileInfoPane vitals={profile.vitals} />
-                    </div>
-                  );
+                  items.push(<div key="info-pane" className="mt-3"><ProfileInfoPane vitals={profile.vitals} /></div>);
                   infoPaneInserted = true;
                 }
               }
@@ -229,12 +250,9 @@ export function ProfileCard({
                 const actualPhotoIndex = photoIdx + 1;
                 const pi = actualPhotoIndex;
                 items.push(
-                  <div key={`photo-${pi}`}
-                    className={`mt-3 ${isPhotoGlowing(pi) ? 'rose-glow-shimmer' : ''}`}
-                  >
+                  <div key={`photo-${pi}`} className={`mt-3 ${isPhotoGlowing(pi) ? 'rose-glow-shimmer' : ''}`}>
                     <div className="relative rounded-2xl overflow-hidden">
-                      <img src={remainingPhotos[photoIdx].url} alt={`${profile.name} photo ${pi + 1}`}
-                        className="w-full aspect-[3/4] object-cover" loading="lazy" />
+                      <img src={remainingPhotos[photoIdx].url} alt={`${profile.name} photo ${pi + 1}`} className="w-full aspect-[3/4] object-cover" loading="lazy" />
                       {isPhotoGlowing(pi) && glowResults.photoGlows[pi]?.sharedTags.length > 0 && (
                         <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full px-3 py-1.5">
                           <Sparkles size={14} className="text-hinge-gold" />
@@ -255,13 +273,10 @@ export function ProfileCard({
           })()}
         </div>
 
-        {/* Skip button - fixed left, just above bottom nav */}
+        {/* Skip button */}
         <div className="fixed bottom-[72px] left-0 z-30 max-w-md mx-auto w-full pointer-events-none" style={{ left: '50%', transform: 'translateX(-50%)' }}>
           <div className="pointer-events-auto pl-3">
-            <button
-              onClick={onSkip}
-              className="w-11 h-11 rounded-full border-2 border-border bg-background shadow-lg flex items-center justify-center hover:bg-muted transition-colors"
-            >
+            <button onClick={onSkip} className="w-11 h-11 rounded-full border-2 border-border bg-background shadow-lg flex items-center justify-center hover:bg-muted transition-colors">
               <X size={22} strokeWidth={3} className="text-foreground" />
             </button>
           </div>
@@ -276,19 +291,19 @@ export function ProfileCard({
               rosesRemaining={rosesRemaining}
               bridgeUsesRemaining={bridgeUsesRemaining}
               isPaid={isPaid}
-              onSend={(message, isRose, isPriority) => {
-                const hadBridge = !!getGhostText();
-                const success = onLike({
-                  targetType: selectedTarget.type,
-                  targetIndex: selectedTarget.index,
-                  message: message || undefined,
-                  isRose,
-                  isPriority,
-                  hadBridgeSuggestion: hadBridge,
-                });
-                if (success) setSelectedTarget(null);
-              }}
+              recipientProfile={profile}
+              onSend={handleLikeSend}
               onCancel={() => setSelectedTarget(null)}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Like without message sheet */}
+        <AnimatePresence>
+          {showLikeWithoutMsg && (
+            <LikeWithoutMessageSheet
+              onAddNote={() => { setShowLikeWithoutMsg(false); setPendingNoMsgLike(null); }}
+              onSkip={confirmNoMsgLike}
             />
           )}
         </AnimatePresence>
@@ -298,10 +313,7 @@ export function ProfileCard({
 }
 
 function PromptCard({
-  prompt,
-  isGlowing,
-  sharedInterests,
-  onLike,
+  prompt, isGlowing, sharedInterests, onLike,
 }: {
   prompt: { id: string; question: string; answer: string };
   isGlowing: boolean;
@@ -313,33 +325,21 @@ function PromptCard({
       <div className={`bg-card rounded-2xl p-5 relative border border-border shadow-sm ${isGlowing ? 'rose-glow-prompt' : ''}`}>
         {isGlowing && (
           <>
-            <span className="rose-glow-star">✦</span>
-            <span className="rose-glow-star">✦</span>
-            <span className="rose-glow-star">✦</span>
-            <span className="rose-glow-star">✦</span>
-            <span className="rose-glow-star">✦</span>
-            <span className="rose-glow-star">✦</span>
+            <span className="rose-glow-star">✦</span><span className="rose-glow-star">✦</span>
+            <span className="rose-glow-star">✦</span><span className="rose-glow-star">✦</span>
+            <span className="rose-glow-star">✦</span><span className="rose-glow-star">✦</span>
           </>
         )}
         {isGlowing && sharedInterests.length > 0 && (
           <div className="flex items-center gap-1.5 mb-3">
             <Sparkles size={14} className="text-hinge-gold" />
-            <span className="text-[11px] font-medium text-hinge-orange">
-              You both love: {sharedInterests.join(', ')}
-            </span>
+            <span className="text-[11px] font-medium text-hinge-orange">You both love: {sharedInterests.join(', ')}</span>
           </div>
         )}
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-          {prompt.question}
-        </p>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{prompt.question}</p>
         <p className="text-foreground font-hinge-serif text-lg leading-relaxed">{prompt.answer}</p>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onLike();
-          }}
-          className="absolute bottom-3 right-3 bg-muted rounded-full p-2 hover:bg-accent transition-colors"
-        >
+        <button onClick={(e) => { e.stopPropagation(); onLike(); }}
+          className="absolute bottom-3 right-3 bg-muted rounded-full p-2 hover:bg-accent transition-colors">
           <Heart size={18} strokeWidth={2.5} className="text-foreground" />
         </button>
       </div>
