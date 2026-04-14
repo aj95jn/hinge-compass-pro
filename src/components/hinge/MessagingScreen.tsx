@@ -15,6 +15,9 @@ interface MessagingScreenProps {
   onSendMessage: (matchId: string, text: string) => void;
 }
 
+// Demo: treat matches older than 10s as "unmessaged for 24h" 
+const UNMESSAGED_THRESHOLD_MS = 10_000;
+
 export function MessagingScreen({
   matches,
   profiles,
@@ -30,6 +33,15 @@ export function MessagingScreen({
   const yourTurn = matches.filter((m) => m.lastMessageFrom === 'match');
   const theirTurn = matches.filter((m) => m.lastMessageFrom === 'user');
   const newMatches = matches.filter((m) => m.isNew);
+
+  // Check if a match is unmessaged (no user messages sent)
+  const isUnmessaged = (match: Match) => {
+    const msgs = chatMessages.filter(m => m.matchId === match.id && m.from === 'user');
+    if (msgs.length > 0) return false;
+    // Check if match is old enough (simulated 24h with short threshold for demo)
+    const matchAge = Date.now() - (match.lastMessageTimestamp || Date.now());
+    return matchAge > UNMESSAGED_THRESHOLD_MS;
+  };
 
   if (activeChatMatchId) {
     const match = matches.find((m) => m.id === activeChatMatchId);
@@ -83,35 +95,27 @@ export function MessagingScreen({
       )}
 
       {/* Your Turn */}
-      <CollapsibleSection
-        title="Your Turn"
-        count={yourTurn.length}
-        isOpen={yourTurnOpen}
-        onToggle={() => setYourTurnOpen(!yourTurnOpen)}
-      >
+      <CollapsibleSection title="Your Turn" count={yourTurn.length} isOpen={yourTurnOpen} onToggle={() => setYourTurnOpen(!yourTurnOpen)}>
         {yourTurn.map((match) => (
           <MatchRow
             key={match.id}
             match={match}
             profile={profiles.find((p) => p.id === match.profileId)}
             onClick={() => onOpenChat(match.id)}
+            showUnmessagedNudge={isUnmessaged(match)}
           />
         ))}
       </CollapsibleSection>
 
       {/* Their Turn */}
-      <CollapsibleSection
-        title="Their Turn"
-        count={theirTurn.length}
-        isOpen={theirTurnOpen}
-        onToggle={() => setTheirTurnOpen(!theirTurnOpen)}
-      >
+      <CollapsibleSection title="Their Turn" count={theirTurn.length} isOpen={theirTurnOpen} onToggle={() => setTheirTurnOpen(!theirTurnOpen)}>
         {theirTurn.map((match) => (
           <MatchRow
             key={match.id}
             match={match}
             profile={profiles.find((p) => p.id === match.profileId)}
             onClick={() => onOpenChat(match.id)}
+            showUnmessagedNudge={isUnmessaged(match)}
           />
         ))}
       </CollapsibleSection>
@@ -128,43 +132,20 @@ export function MessagingScreen({
 }
 
 function CollapsibleSection({
-  title,
-  count,
-  isOpen,
-  onToggle,
-  children,
+  title, count, isOpen, onToggle, children,
 }: {
-  title: string;
-  count: number;
-  isOpen: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
+  title: string; count: number; isOpen: boolean; onToggle: () => void; children: React.ReactNode;
 }) {
   if (count === 0) return null;
-
   return (
     <div className="mb-4">
-      <button
-        onClick={onToggle}
-        className="flex items-center gap-2 w-full py-2 text-left"
-      >
-        <span className="text-sm font-semibold text-foreground">
-          {title} ({count})
-        </span>
-        {isOpen ? (
-          <ChevronUp size={16} className="text-muted-foreground" />
-        ) : (
-          <ChevronDown size={16} className="text-muted-foreground" />
-        )}
+      <button onClick={onToggle} className="flex items-center gap-2 w-full py-2 text-left">
+        <span className="text-sm font-semibold text-foreground">{title} ({count})</span>
+        {isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
       </button>
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden space-y-1"
-          >
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden space-y-1">
             {children}
           </motion.div>
         )}
@@ -174,35 +155,41 @@ function CollapsibleSection({
 }
 
 function MatchRow({
-  match,
-  profile,
-  onClick,
+  match, profile, onClick, showUnmessagedNudge,
 }: {
-  match: Match;
-  profile?: Profile;
-  onClick: () => void;
+  match: Match; profile?: Profile; onClick: () => void; showUnmessagedNudge?: boolean;
 }) {
   if (!profile) return null;
 
   return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted transition-colors text-left"
-    >
-      <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center">
-        {profile.photos[0] ? (
-          <img src={profile.photos[0].url} alt={profile.name} className="w-full h-full object-cover" />
-        ) : (
-          <AnimatedAvatar name={profile.name} gender={profile.gender} size="sm" />
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground">{profile.name}</p>
-        <p className="text-xs text-muted-foreground truncate">{match.lastMessage}</p>
-      </div>
-      {match.unread && (
-        <div className="w-2.5 h-2.5 rounded-full bg-primary flex-shrink-0" />
+    <div>
+      <button onClick={onClick} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted transition-colors text-left">
+        <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center">
+          {profile.photos[0] ? (
+            <img src={profile.photos[0].url} alt={profile.name} className="w-full h-full object-cover" />
+          ) : (
+            <AnimatedAvatar name={profile.name} gender={profile.gender} size="sm" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground">{profile.name}</p>
+          <p className="text-xs text-muted-foreground truncate">{match.lastMessage}</p>
+        </div>
+        {match.unread && <div className="w-2.5 h-2.5 rounded-full bg-primary flex-shrink-0" />}
+      </button>
+      {/* Unmessaged match nudge */}
+      {showUnmessagedNudge && (
+        <motion.button
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          onClick={onClick}
+          className="w-full px-3 pb-2 -mt-1"
+        >
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2 text-xs text-blue-700 dark:text-blue-300 font-medium">
+            Say hi — matches who hear from you early are more likely to reply
+          </div>
+        </motion.button>
       )}
-    </button>
+    </div>
   );
 }
