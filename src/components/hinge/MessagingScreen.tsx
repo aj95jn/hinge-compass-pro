@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
 import { AnimatedAvatar } from './AnimatedAvatar';
+import { MatchCardNudge } from './MatchCardNudge';
 import { Match, Profile, ChatMessage } from '@/types';
 import { ChatThread } from './ChatThread';
 
@@ -15,8 +16,20 @@ interface MessagingScreenProps {
   onSendMessage: (matchId: string, text: string) => void;
 }
 
-// Demo: treat matches older than 10s as "unmessaged for 24h" 
 const UNMESSAGED_THRESHOLD_MS = 10_000;
+
+// Generate contextual nudge text for a match card
+function getMatchNudgeText(profile: Profile, isUnmessaged: boolean): string | null {
+  if (isUnmessaged) {
+    return "Say hi — matches who hear from you early are more likely to reply";
+  }
+  const interests = profile.preferences || [];
+  if (interests.length > 0) {
+    const interest = interests[0];
+    return `${profile.name} is into ${interest} — ask about it`;
+  }
+  return `Don't leave ${profile.name} waiting — say something genuine`;
+}
 
 export function MessagingScreen({
   matches,
@@ -34,11 +47,9 @@ export function MessagingScreen({
   const theirTurn = matches.filter((m) => m.lastMessageFrom === 'user');
   const newMatches = matches.filter((m) => m.isNew);
 
-  // Check if a match is unmessaged (no user messages sent)
   const isUnmessaged = (match: Match) => {
     const msgs = chatMessages.filter(m => m.matchId === match.id && m.from === 'user');
     if (msgs.length > 0) return false;
-    // Check if match is old enough (simulated 24h with short threshold for demo)
     const matchAge = Date.now() - (match.lastMessageTimestamp || Date.now());
     return matchAge > UNMESSAGED_THRESHOLD_MS;
   };
@@ -96,28 +107,34 @@ export function MessagingScreen({
 
       {/* Your Turn */}
       <CollapsibleSection title="Your Turn" count={yourTurn.length} isOpen={yourTurnOpen} onToggle={() => setYourTurnOpen(!yourTurnOpen)}>
-        {yourTurn.map((match) => (
-          <MatchRow
-            key={match.id}
-            match={match}
-            profile={profiles.find((p) => p.id === match.profileId)}
-            onClick={() => onOpenChat(match.id)}
-            showUnmessagedNudge={isUnmessaged(match)}
-          />
-        ))}
+        {yourTurn.map((match) => {
+          const profile = profiles.find((p) => p.id === match.profileId);
+          return (
+            <MatchRow
+              key={match.id}
+              match={match}
+              profile={profile}
+              onClick={() => onOpenChat(match.id)}
+              nudgeText={profile ? getMatchNudgeText(profile, isUnmessaged(match)) : null}
+            />
+          );
+        })}
       </CollapsibleSection>
 
       {/* Their Turn */}
       <CollapsibleSection title="Their Turn" count={theirTurn.length} isOpen={theirTurnOpen} onToggle={() => setTheirTurnOpen(!theirTurnOpen)}>
-        {theirTurn.map((match) => (
-          <MatchRow
-            key={match.id}
-            match={match}
-            profile={profiles.find((p) => p.id === match.profileId)}
-            onClick={() => onOpenChat(match.id)}
-            showUnmessagedNudge={isUnmessaged(match)}
-          />
-        ))}
+        {theirTurn.map((match) => {
+          const profile = profiles.find((p) => p.id === match.profileId);
+          return (
+            <MatchRow
+              key={match.id}
+              match={match}
+              profile={profile}
+              onClick={() => onOpenChat(match.id)}
+              nudgeText={profile ? getMatchNudgeText(profile, isUnmessaged(match)) : null}
+            />
+          );
+        })}
       </CollapsibleSection>
 
       {matches.length === 0 && (
@@ -155,9 +172,9 @@ function CollapsibleSection({
 }
 
 function MatchRow({
-  match, profile, onClick, showUnmessagedNudge,
+  match, profile, onClick, nudgeText,
 }: {
-  match: Match; profile?: Profile; onClick: () => void; showUnmessagedNudge?: boolean;
+  match: Match; profile?: Profile; onClick: () => void; nudgeText?: string | null;
 }) {
   if (!profile) return null;
 
@@ -177,19 +194,8 @@ function MatchRow({
         </div>
         {match.unread && <div className="w-2.5 h-2.5 rounded-full bg-primary flex-shrink-0" />}
       </button>
-      {/* Unmessaged match nudge */}
-      {showUnmessagedNudge && (
-        <motion.button
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          onClick={onClick}
-          className="w-full px-3 pb-2 -mt-1"
-        >
-          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2 text-xs text-blue-700 dark:text-blue-300 font-medium">
-            Say hi — matches who hear from you early are more likely to reply
-          </div>
-        </motion.button>
-      )}
+      {/* Animated match card nudge */}
+      {nudgeText && <MatchCardNudge text={nudgeText} />}
     </div>
   );
 }

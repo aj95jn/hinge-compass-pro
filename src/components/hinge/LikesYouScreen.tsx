@@ -1,13 +1,23 @@
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, X } from 'lucide-react';
 import { Like, Profile } from '@/types';
 import { AnimatedAvatar } from './AnimatedAvatar';
+import { MatchCardNudge } from './MatchCardNudge';
 
 interface LikesYouScreenProps {
   likes: Like[];
   profiles: Profile[];
   onMatch: (likeId: string) => void;
   onDismiss: (likeId: string) => void;
+}
+
+function getLikeCardNudge(profile: Profile): string | null {
+  const interests = profile.preferences || [];
+  if (interests.length > 0) {
+    return `${profile.name} values ${interests[0]} — a thoughtful reply goes far`;
+  }
+  return `Reply with something genuine — ${profile.name} took the first step`;
 }
 
 export function LikesYouScreen({ likes, profiles, onMatch, onDismiss }: LikesYouScreenProps) {
@@ -30,6 +40,7 @@ export function LikesYouScreen({ likes, profiles, onMatch, onDismiss }: LikesYou
         {likes.map((like) => {
           const profile = profiles.find((p) => p.id === like.fromProfileId);
           if (!profile) return null;
+          const nudgeText = getLikeCardNudge(profile);
 
           return (
             <motion.div
@@ -79,6 +90,12 @@ export function LikesYouScreen({ likes, profiles, onMatch, onDismiss }: LikesYou
                   </div>
                 </div>
               </div>
+              {/* Animated nudge on like card */}
+              {nudgeText && (
+                <div className="px-1 pb-2">
+                  <MatchCardNudge text={nudgeText} />
+                </div>
+              )}
             </motion.div>
           );
         })}
