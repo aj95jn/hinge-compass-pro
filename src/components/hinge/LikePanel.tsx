@@ -72,7 +72,7 @@ export function LikePanel({
     if (message.length > 0) setShowTooltip(false);
   }, [message]);
 
-  // Message Coach: analyze after typing stops
+  // Message Coach: analyze after typing stops — fires on ALL prompts
   const dismissNudge = useCallback(() => setShowNudge(false), []);
 
   useEffect(() => {
@@ -82,17 +82,23 @@ export function LikePanel({
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
 
-    if (!message.trim() || message.trim().length < 3) {
+    if (!message.trim()) {
       setCoachNudge(null);
       return;
     }
 
-    // Fire once after user stops typing (800ms debounce)
+    // Fire after user stops typing (800ms debounce)
     typingTimerRef.current = setTimeout(() => {
-      if (nudgeFiredCount >= 2) return; // max 2 nudges per session (initial + stuck)
+      if (nudgeFiredCount >= 2) return;
 
       const nudge = analyzeMessage(message, recipientProfile);
       if (nudge) {
+        // Block nudges always show regardless of count
+        if (nudge.type === 'block') {
+          setCoachNudge(nudge);
+          setShowNudge(true);
+          return;
+        }
         setCoachNudge(nudge);
         setShowNudge(true);
         setNudgeFiredCount(prev => Math.min(prev + 1, 2));
@@ -101,7 +107,7 @@ export function LikePanel({
         stuckTimerRef.current = setTimeout(() => {
           if (nudgeFiredCount < 1) {
             setShowNudge(true);
-            setNudgeFiredCount(2); // prevent further
+            setNudgeFiredCount(2);
           }
         }, 6000);
       }
@@ -120,6 +126,11 @@ export function LikePanel({
   };
 
   const handleSendAttempt = (isRose: boolean, isPriority: boolean) => {
+    // Block nudges cannot be sent
+    if (coachNudge && coachNudge.type === 'block' && message.trim()) {
+      setShowNudge(true);
+      return;
+    }
     // Pre-send check: if warning nudge active, show confirmation
     const warning = message.trim() ? shouldShowPreSendWarning(message, recipientProfile) : null;
     if (warning) {
@@ -153,7 +164,7 @@ export function LikePanel({
             {showNudge && coachNudge && (
               <MessageCoachNudge
                 nudge={coachNudge}
-                isLocked={isCoachLocked}
+                isLocked={isCoachLocked && coachNudge.type !== 'block'}
                 onDismiss={dismissNudge}
               />
             )}

@@ -56,11 +56,13 @@ export function ProfileCard({
   const isPromptGlowing = (promptId: string) => glowResults.promptGlows[promptId]?.glow ?? false;
   const isPhotoGlowing = (index: number) => glowResults.photoGlows[index]?.glow ?? false;
 
+  // Change 1: Ghost text ONLY on Rose Glow highlighted prompt
   const getGhostText = () => {
     if (!selectedTarget || selectedTarget.type !== 'prompt') return undefined;
     const prompt = profile.prompts[selectedTarget.index];
     if (!prompt) return undefined;
-    if (prompt.isBridgeBuilder || isPromptGlowing(prompt.id)) {
+    // Only show placeholder suggestion if this prompt is glowing (Rose Glow)
+    if (isPromptGlowing(prompt.id)) {
       return glowResults.promptGlows[prompt.id]?.ghostText || prompt.bridgeGhostText;
     }
     return undefined;
