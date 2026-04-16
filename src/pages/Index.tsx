@@ -9,6 +9,9 @@ import { StandoutsScreen } from '@/components/hinge/StandoutsScreen';
 import { standoutProfiles } from '@/data/standoutsData';
 import { UserProfileScreen } from '@/components/hinge/UserProfileScreen';
 import { RefundPopup } from '@/components/hinge/RefundPopup';
+import { LikeNudgeToast } from '@/components/hinge/LikeNudgeToast';
+import { generateLikeNudge } from '@/lib/messageCoach';
+import { discoverProfiles } from '@/data/mockData';
 import { Heart, SlidersHorizontal, ChevronDown, X, Zap } from 'lucide-react';
 
 // Filter options
@@ -48,6 +51,7 @@ const Index = () => {
   const whatsNewIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const likesSincePopupRef = useRef(0);
   const hasSeenRef = useRef(false);
+  const [likeNudge, setLikeNudge] = useState<string | null>(null);
 
   // Stop popup forever once user views "What's New" tab in profile
   const markWhatsNewSeen = useCallback(() => {
@@ -87,7 +91,7 @@ const Index = () => {
     };
   }, [state.activeTab, hasSeenWhatsNew]);
 
-  // Track likes — show popup every 3 likes
+  // Track likes — show popup every 3 likes + like nudge on every like
   const handleLikeWithPopup = useCallback((params: {
     targetType: 'photo' | 'prompt';
     targetIndex: number;
@@ -96,10 +100,18 @@ const Index = () => {
     isPriority?: boolean;
     hadBridgeSuggestion?: boolean;
   }) => {
+    const currentProfile = state.currentProfile;
     const result = state.sendLike({
-      profileId: state.currentProfile!.id,
+      profileId: currentProfile!.id,
       ...params,
     });
+
+    // Change 5: Show a brief nudge on every like sent
+    if (result && currentProfile) {
+      const nudge = generateLikeNudge(currentProfile);
+      setLikeNudge(nudge);
+    }
+
     if (!hasSeenWhatsNew) {
       likesSincePopupRef.current += 1;
       if (likesSincePopupRef.current >= 3) {
