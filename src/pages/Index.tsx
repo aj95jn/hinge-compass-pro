@@ -440,6 +440,13 @@ const Index = () => {
         matchesUnread={matchesUnread}
       />
 
+      {/* Like Nudge Toast */}
+      <AnimatePresence>
+        {likeNudge && (
+          <LikeNudgeToast text={likeNudge} onDismiss={() => setLikeNudge(null)} />
+        )}
+      </AnimatePresence>
+
       {/* What's New Popup */}
       <AnimatePresence>
         {showWhatsNew && (
