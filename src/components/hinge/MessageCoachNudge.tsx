@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Info, Lock } from 'lucide-react';
+import { X, Info, Lock, ShieldAlert } from 'lucide-react';
 import { CoachNudge, NudgeType } from '@/lib/messageCoach';
 
 interface MessageCoachNudgeProps {
@@ -13,6 +13,7 @@ const accentColors: Record<NudgeType, { bg: string; border: string; icon: string
   positive: { bg: 'bg-green-50 dark:bg-green-950/30', border: 'border-green-200 dark:border-green-800', icon: 'text-green-600 dark:text-green-400' },
   warning: { bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800', icon: 'text-amber-600 dark:text-amber-400' },
   tone: { bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-800', icon: 'text-blue-600 dark:text-blue-400' },
+  block: { bg: 'bg-red-50 dark:bg-red-950/30', border: 'border-red-200 dark:border-red-800', icon: 'text-red-600 dark:text-red-400' },
 };
 
 export function MessageCoachNudge({ nudge, isLocked, onDismiss }: MessageCoachNudgeProps) {
@@ -20,11 +21,12 @@ export function MessageCoachNudge({ nudge, isLocked, onDismiss }: MessageCoachNu
   const tooltipRef = useRef<HTMLDivElement>(null);
   const colors = accentColors[nudge.type];
 
-  // Auto-dismiss after 3 seconds
+  // Auto-dismiss after 3 seconds (but not for blocks)
   useEffect(() => {
+    if (nudge.type === 'block') return;
     const timer = setTimeout(onDismiss, 3000);
     return () => clearTimeout(timer);
-  }, [onDismiss]);
+  }, [onDismiss, nudge.type]);
 
   // Close tooltip on outside click
   useEffect(() => {
@@ -46,6 +48,9 @@ export function MessageCoachNudge({ nudge, isLocked, onDismiss }: MessageCoachNu
       transition={{ duration: 0.2 }}
       className={`rounded-xl border px-3 py-2 flex items-start gap-2 ${colors.bg} ${colors.border}`}
     >
+      {nudge.type === 'block' && (
+        <ShieldAlert size={14} className={`${colors.icon} shrink-0 mt-0.5`} />
+      )}
       <div className="flex-1 min-w-0">
         <p className={`text-xs font-medium leading-snug ${isLocked ? 'line-clamp-1' : ''}`}>
           {isLocked ? (
@@ -61,7 +66,7 @@ export function MessageCoachNudge({ nudge, isLocked, onDismiss }: MessageCoachNu
 
       <div className="flex items-center gap-1 shrink-0">
         {/* Info icon */}
-        {!isLocked && (
+        {!isLocked && nudge.type !== 'block' && (
           <div className="relative" ref={tooltipRef}>
             <button
               onClick={(e) => { e.stopPropagation(); setShowTooltip(v => !v); }}
@@ -93,10 +98,12 @@ export function MessageCoachNudge({ nudge, isLocked, onDismiss }: MessageCoachNu
           </button>
         )}
 
-        {/* Dismiss */}
-        <button onClick={onDismiss} className="p-0.5 rounded-full hover:bg-accent transition-colors">
-          <X size={13} className="text-muted-foreground" />
-        </button>
+        {/* Dismiss (not for blocks) */}
+        {nudge.type !== 'block' && (
+          <button onClick={onDismiss} className="p-0.5 rounded-full hover:bg-accent transition-colors">
+            <X size={13} className="text-muted-foreground" />
+          </button>
+        )}
       </div>
     </motion.div>
   );
