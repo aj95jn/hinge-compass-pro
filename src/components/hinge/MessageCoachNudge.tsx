@@ -21,12 +21,8 @@ export function MessageCoachNudge({ nudge, isLocked, onDismiss }: MessageCoachNu
   const tooltipRef = useRef<HTMLDivElement>(null);
   const colors = accentColors[nudge.type];
 
-  // Auto-dismiss after 3 seconds (but not for blocks)
-  useEffect(() => {
-    if (nudge.type === 'block') return;
-    const timer = setTimeout(onDismiss, 3000);
-    return () => clearTimeout(timer);
-  }, [onDismiss, nudge.type]);
+  // Post-write nudges persist until the user edits the message.
+  // Dismissal happens via the X button or when the parent detects message edits.
 
   // Close tooltip on outside click
   useEffect(() => {
