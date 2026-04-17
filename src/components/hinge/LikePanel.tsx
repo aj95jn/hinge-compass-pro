@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Info } from 'lucide-react';
 import { Profile } from '@/types';
-import { analyzeMessage, CoachNudge } from '@/lib/messageCoach';
+import { analyzeMessage, CoachNudge, generateEmptyLikeSuggestion } from '@/lib/messageCoach';
 import { MessageCoachNudge } from './MessageCoachNudge';
+import { EmptyLikePreSendCard } from './EmptyLikePreSendCard';
 
 interface LikePanelProps {
   ghostText?: string;
@@ -12,6 +13,7 @@ interface LikePanelProps {
   bridgeUsesRemaining: number;
   isPaid: boolean;
   recipientProfile: Profile;
+  userProfile?: Profile;
   onSend: (message: string, isRose: boolean, isPriority: boolean) => void;
   onCancel: () => void;
 }
@@ -22,6 +24,7 @@ export function LikePanel({
   rosesRemaining,
   isPaid,
   recipientProfile,
+  userProfile,
   onSend,
   onCancel,
 }: LikePanelProps) {
@@ -29,15 +32,19 @@ export function LikePanel({
   const [showTooltip, setShowTooltip] = useState(false);
   const [coachNudge, setCoachNudge] = useState<CoachNudge | null>(null);
   const [showNudge, setShowNudge] = useState(false);
+  const [showEmptyPreSend, setShowEmptyPreSend] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const maxWords = 50;
 
   const wordCount = message.trim() ? message.trim().split(/\s+/).length : 0;
 
-  // Note: no blanket "add a note" banner shown on blank message.
-  // Coaching nudges only appear once the user has written content,
-  // so feedback is always specific to what they wrote — never generic.
+  // Pre-computed empty-like suggestion (specific to this profile + user history)
+  const emptyLikeSuggestion = useMemo(
+    () => generateEmptyLikeSuggestion(recipientProfile, userProfile),
+    [recipientProfile, userProfile]
+  );
 
   // Close tooltip on outside click
   useEffect(() => {
@@ -55,7 +62,7 @@ export function LikePanel({
     if (message.length > 0) setShowTooltip(false);
   }, [message]);
 
-  // Message Coach: analyze after typing stops — fires on every prompt
+  // Message Coach: full semantic evaluation after typing stops — fires on every prompt
   useEffect(() => {
     setShowNudge(false);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
@@ -65,8 +72,11 @@ export function LikePanel({
       return;
     }
 
+    // Hide the empty pre-send card the moment user starts writing
+    setShowEmptyPreSend(false);
+
     typingTimerRef.current = setTimeout(() => {
-      const nudge = analyzeMessage(message, recipientProfile);
+      const nudge = analyzeMessage(message, recipientProfile, userProfile);
       if (nudge) {
         setCoachNudge(nudge);
         setShowNudge(true);
@@ -76,17 +86,37 @@ export function LikePanel({
     return () => {
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     };
-  }, [message, recipientProfile]);
+  }, [message, recipientProfile, userProfile]);
 
   const dismissNudge = useCallback(() => setShowNudge(false), []);
 
-  // Fix 3: never block — always allow send
-  const handleSend = (isRose: boolean, isPriority: boolean) => {
+  // Send Like button handler.
+  // Fix 1: empty message -> show pre-send suggestion card with Skip option.
+  // Fix 3: never block — Skip in the card always sends the like.
+  const handleSendClick = (isRose: boolean, isPriority: boolean) => {
+    if (!message.trim()) {
+      // First tap on empty: surface the pre-send suggestion
+      if (!showEmptyPreSend) {
+        setShowEmptyPreSend(true);
+        return;
+      }
+      // Card already shown — second tap of Send (shouldn't happen, but allow fall-through)
+    }
     onSend(message, isRose, isPriority);
   };
 
-  // Inline nudge: only shown after the user has written something.
-  // No generic banner on blank — Send Like remains tappable regardless.
+  // From the pre-send card: "Skip, send like" sends without message
+  const handleSkipAndSend = () => {
+    onSend('', false, true);
+  };
+
+  // From the pre-send card: "Add a message" focuses the textarea
+  const handleFocusInput = () => {
+    setShowEmptyPreSend(false);
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  };
+
+  // Inline post-write nudge (only when there is content)
   const inlineNudge: CoachNudge | null = message.trim() && showNudge ? coachNudge : null;
 
   return (
@@ -98,7 +128,18 @@ export function LikePanel({
       className="fixed inset-x-0 bottom-0 bg-card border-t border-border rounded-t-3xl p-5 pb-24 z-50 max-w-md mx-auto shadow-xl"
     >
       <div className="space-y-3">
-        {/* Inline coaching nudge (pre-send only) */}
+        {/* Pre-send empty-message suggestion card (Fix 1) */}
+        <AnimatePresence>
+          {showEmptyPreSend && !message.trim() && (
+            <EmptyLikePreSendCard
+              suggestion={emptyLikeSuggestion}
+              onAddMessage={handleFocusInput}
+              onSkip={handleSkipAndSend}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Inline post-write coaching nudge */}
         <AnimatePresence>
           {inlineNudge && (
             <MessageCoachNudge
@@ -112,6 +153,7 @@ export function LikePanel({
         {/* Message Input */}
         <div className="relative">
           <textarea
+            ref={textareaRef}
             value={message}
             onChange={(e) => {
               const words = e.target.value.trim().split(/\s+/);
@@ -170,7 +212,7 @@ export function LikePanel({
         {/* Action buttons — always tappable */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => handleSend(true, false)}
+            onClick={() => handleSendClick(true, false)}
             disabled={rosesRemaining <= 0}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-hinge-rose/10 text-hinge-rose text-sm font-medium disabled:opacity-40 hover:bg-hinge-rose/20 transition-colors"
           >
@@ -179,7 +221,7 @@ export function LikePanel({
           </button>
 
           <button
-            onClick={() => handleSend(false, true)}
+            onClick={() => handleSendClick(false, true)}
             className="flex-1 bg-primary text-primary-foreground rounded-full py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity"
           >
             Send Like
