@@ -9,8 +9,6 @@ import { StandoutsScreen } from '@/components/hinge/StandoutsScreen';
 import { standoutProfiles } from '@/data/standoutsData';
 import { UserProfileScreen } from '@/components/hinge/UserProfileScreen';
 import { RefundPopup } from '@/components/hinge/RefundPopup';
-import { LikeNudgeToast } from '@/components/hinge/LikeNudgeToast';
-import { generateLikeNudge } from '@/lib/messageCoach';
 import { discoverProfiles } from '@/data/mockData';
 import { Heart, SlidersHorizontal, ChevronDown, X, Zap } from 'lucide-react';
 
@@ -51,7 +49,7 @@ const Index = () => {
   const whatsNewIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const likesSincePopupRef = useRef(0);
   const hasSeenRef = useRef(false);
-  const [likeNudge, setLikeNudge] = useState<string | null>(null);
+  
 
   // Stop popup forever once user views "What's New" tab in profile
   const markWhatsNewSeen = useCallback(() => {
@@ -106,11 +104,7 @@ const Index = () => {
       ...params,
     });
 
-    // Change 5: Show a brief nudge on every like sent
-    if (result && currentProfile) {
-      const nudge = generateLikeNudge(currentProfile);
-      setLikeNudge(nudge);
-    }
+    // Fix 2: No coaching feedback after sending — all coaching is pre-send only.
 
     if (!hasSeenWhatsNew) {
       likesSincePopupRef.current += 1;
@@ -440,12 +434,6 @@ const Index = () => {
         matchesUnread={matchesUnread}
       />
 
-      {/* Like Nudge Toast */}
-      <AnimatePresence>
-        {likeNudge && (
-          <LikeNudgeToast text={likeNudge} onDismiss={() => setLikeNudge(null)} />
-        )}
-      </AnimatePresence>
 
       {/* What's New Popup */}
       <AnimatePresence>
