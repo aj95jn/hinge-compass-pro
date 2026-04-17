@@ -5,7 +5,7 @@ import { Profile, VibeSyncResult, GlowResult } from '@/types';
 import { VibeSync } from './VibeSync';
 import { LikePanel } from './LikePanel';
 import { ProfileInfoPane } from './ProfileInfoPane';
-import { LikeWithoutMessageSheet } from './LikeWithoutMessageSheet';
+import { generateGhostText } from '@/data/mockData';
 
 interface ProfileCardProps {
   profile: Profile;
@@ -44,87 +44,49 @@ export function ProfileCard({
     index: number;
   } | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [showLikeWithoutMsg, setShowLikeWithoutMsg] = useState(false);
-  const [pendingNoMsgLike, setPendingNoMsgLike] = useState<{
-    type: 'photo' | 'prompt';
-    index: number;
-    isRose: boolean;
-    isPriority: boolean;
-    hadBridge: boolean;
-  } | null>(null);
 
   const isPromptGlowing = (promptId: string) => glowResults.promptGlows[promptId]?.glow ?? false;
   const isPhotoGlowing = (index: number) => glowResults.photoGlows[index]?.glow ?? false;
 
-  // Change 1: Ghost text ONLY on Rose Glow highlighted prompt
+  // Fix 6: Ghost text on EVERY written prompt — specific to that prompt + her profile
   const getGhostText = () => {
     if (!selectedTarget || selectedTarget.type !== 'prompt') return undefined;
     const prompt = profile.prompts[selectedTarget.index];
     if (!prompt) return undefined;
-    // Only show placeholder suggestion if this prompt is glowing (Rose Glow)
-    if (isPromptGlowing(prompt.id)) {
-      return glowResults.promptGlows[prompt.id]?.ghostText || prompt.bridgeGhostText;
-    }
-    return undefined;
+
+    // Prefer Rose Glow tailored ghost text when available
+    const glowGhost = glowResults.promptGlows[prompt.id]?.ghostText;
+    if (glowGhost) return glowGhost;
+    if (prompt.bridgeGhostText) return prompt.bridgeGhostText;
+
+    // Otherwise generate from her prompt content + shared interests
+    const sharedInterests = glowResults.promptGlows[prompt.id]?.sharedInterests || [];
+    return generateGhostText(sharedInterests, prompt.answer);
   };
 
   const getBridgeExplanation = () => {
     if (!selectedTarget || selectedTarget.type !== 'prompt') return undefined;
     const prompt = profile.prompts[selectedTarget.index];
     if (!prompt) return undefined;
-    const ghostText = getGhostText();
-    if (!ghostText) return undefined;
-    
     const sharedInterests = glowResults.promptGlows[prompt.id]?.sharedInterests || [];
     if (sharedInterests.length > 0) {
-      return `You both mentioned ${sharedInterests.join(' and ')} — this opening style has worked well for similar profiles.`;
+      return `You both mentioned ${sharedInterests.join(' and ')} — this opening style tends to land well.`;
     }
-    if (prompt.isBridgeBuilder) {
-      return `Her profile signals she values genuine curiosity. This opener reflects that.`;
-    }
-    return `Based on shared interests, this opener is tailored to spark a real conversation.`;
+    return `Tailored to ${profile.name}'s prompt — designed to spark a real reply.`;
   };
 
   const handleLikeSend = (message: string, isRose: boolean, isPriority: boolean) => {
     if (!selectedTarget) return;
-
-    // Like without message nudge
-    if (!message.trim()) {
-      setPendingNoMsgLike({
-        type: selectedTarget.type,
-        index: selectedTarget.index,
-        isRose,
-        isPriority,
-        hadBridge: !!getGhostText(),
-      });
-      setShowLikeWithoutMsg(true);
-      return;
-    }
-
-    const hadBridge = !!getGhostText();
+    // Fix 3: never block — always send
     const success = onLike({
       targetType: selectedTarget.type,
       targetIndex: selectedTarget.index,
-      message: message || undefined,
+      message: message.trim() ? message : undefined,
       isRose,
       isPriority,
-      hadBridgeSuggestion: hadBridge,
+      hadBridgeSuggestion: !!getGhostText(),
     });
     if (success) setSelectedTarget(null);
-  };
-
-  const confirmNoMsgLike = () => {
-    if (!pendingNoMsgLike) return;
-    const success = onLike({
-      targetType: pendingNoMsgLike.type,
-      targetIndex: pendingNoMsgLike.index,
-      isRose: pendingNoMsgLike.isRose,
-      isPriority: pendingNoMsgLike.isPriority,
-      hadBridgeSuggestion: pendingNoMsgLike.hadBridge,
-    });
-    if (success) setSelectedTarget(null);
-    setShowLikeWithoutMsg(false);
-    setPendingNoMsgLike(null);
   };
 
   return (
