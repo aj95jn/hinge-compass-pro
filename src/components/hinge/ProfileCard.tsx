@@ -9,6 +9,7 @@ import { generateGhostText } from '@/data/mockData';
 
 interface ProfileCardProps {
   profile: Profile;
+  userProfile?: Profile;
   vibeSync: VibeSyncResult;
   glowResults: GlowResult;
   likesRemaining: number;
@@ -29,6 +30,7 @@ interface ProfileCardProps {
 
 export function ProfileCard({
   profile,
+  userProfile,
   vibeSync,
   glowResults,
   likesRemaining,
@@ -256,6 +258,7 @@ export function ProfileCard({
               bridgeUsesRemaining={bridgeUsesRemaining}
               isPaid={isPaid}
               recipientProfile={profile}
+              userProfile={userProfile}
               onSend={handleLikeSend}
               onCancel={() => setSelectedTarget(null)}
             />
