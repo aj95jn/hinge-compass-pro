@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Info } from 'lucide-react';
 import { Profile } from '@/types';
-import { analyzeMessage, generateLikeNudge, CoachNudge } from '@/lib/messageCoach';
+import { analyzeMessage, CoachNudge } from '@/lib/messageCoach';
 import { MessageCoachNudge } from './MessageCoachNudge';
 
 interface LikePanelProps {
@@ -35,12 +35,9 @@ export function LikePanel({
 
   const wordCount = message.trim() ? message.trim().split(/\s+/).length : 0;
 
-  // Add-a-note nudge for blank messages (Fix 5: pre-send, not after)
-  const addNoteNudge: CoachNudge = {
-    type: 'tone',
-    text: generateLikeNudge(recipientProfile),
-    explanation: `Likes with a message get 3x more replies. Adding a note tied to ${recipientProfile.name}'s profile makes it stand out.`,
-  };
+  // Note: no blanket "add a note" banner shown on blank message.
+  // Coaching nudges only appear once the user has written content,
+  // so feedback is always specific to what they wrote — never generic.
 
   // Close tooltip on outside click
   useEffect(() => {
@@ -88,12 +85,9 @@ export function LikePanel({
     onSend(message, isRose, isPriority);
   };
 
-  // Decide which nudge to show inline (pre-send only):
-  // - If user has typed: show coach nudge
-  // - If blank: show add-a-note nudge
-  const inlineNudge: CoachNudge | null = message.trim()
-    ? (showNudge ? coachNudge : null)
-    : addNoteNudge;
+  // Inline nudge: only shown after the user has written something.
+  // No generic banner on blank — Send Like remains tappable regardless.
+  const inlineNudge: CoachNudge | null = message.trim() && showNudge ? coachNudge : null;
 
   return (
     <motion.div
