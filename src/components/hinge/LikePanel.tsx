@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Info } from 'lucide-react';
 import { Profile } from '@/types';
-import { analyzeMessage, generateLikeNudge, CoachNudge } from '@/lib/messageCoach';
+import { analyzeMessage, CoachNudge } from '@/lib/messageCoach';
 import { MessageCoachNudge } from './MessageCoachNudge';
 
 interface LikePanelProps {
