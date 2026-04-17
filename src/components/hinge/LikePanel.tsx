@@ -85,12 +85,9 @@ export function LikePanel({
     onSend(message, isRose, isPriority);
   };
 
-  // Decide which nudge to show inline (pre-send only):
-  // - If user has typed: show coach nudge
-  // - If blank: show add-a-note nudge
-  const inlineNudge: CoachNudge | null = message.trim()
-    ? (showNudge ? coachNudge : null)
-    : addNoteNudge;
+  // Inline nudge: only shown after the user has written something.
+  // No generic banner on blank — Send Like remains tappable regardless.
+  const inlineNudge: CoachNudge | null = message.trim() && showNudge ? coachNudge : null;
 
   return (
     <motion.div
