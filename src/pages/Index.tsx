@@ -106,11 +106,7 @@ const Index = () => {
       ...params,
     });
 
-    // Change 5: Show a brief nudge on every like sent
-    if (result && currentProfile) {
-      const nudge = generateLikeNudge(currentProfile);
-      setLikeNudge(nudge);
-    }
+    // Fix 2: No coaching feedback after sending — all coaching is pre-send only.
 
     if (!hasSeenWhatsNew) {
       likesSincePopupRef.current += 1;

@@ -262,15 +262,6 @@ export function ProfileCard({
           )}
         </AnimatePresence>
 
-        {/* Like without message sheet */}
-        <AnimatePresence>
-          {showLikeWithoutMsg && (
-            <LikeWithoutMessageSheet
-              onAddNote={() => { setShowLikeWithoutMsg(false); setPendingNoMsgLike(null); }}
-              onSkip={confirmNoMsgLike}
-            />
-          )}
-        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );
