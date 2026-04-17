@@ -352,6 +352,7 @@ const Index = () => {
             {state.hasMoreProfiles && state.currentProfile ? (
               <ProfileCard
                 profile={state.currentProfile}
+                userProfile={state.userProfile}
                 vibeSync={state.getVibeSync(state.currentProfile.id)}
                 glowResults={state.getGlowResults(state.currentProfile)}
                 likesRemaining={state.likesRemaining}
