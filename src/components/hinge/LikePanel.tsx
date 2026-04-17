@@ -35,12 +35,9 @@ export function LikePanel({
 
   const wordCount = message.trim() ? message.trim().split(/\s+/).length : 0;
 
-  // Add-a-note nudge for blank messages (Fix 5: pre-send, not after)
-  const addNoteNudge: CoachNudge = {
-    type: 'tone',
-    text: generateLikeNudge(recipientProfile),
-    explanation: `Likes with a message get 3x more replies. Adding a note tied to ${recipientProfile.name}'s profile makes it stand out.`,
-  };
+  // Note: no blanket "add a note" banner shown on blank message.
+  // Coaching nudges only appear once the user has written content,
+  // so feedback is always specific to what they wrote — never generic.
 
   // Close tooltip on outside click
   useEffect(() => {
