@@ -233,32 +233,34 @@ export function generateGhostText(sharedInterests: string[], promptAnswer: strin
   const lower = promptAnswer.toLowerCase();
   const hash = stableHash(lower);
 
+  // Each ghost is designed to be specific, fun, and reply-worthy — never filler.
+  // Past ice-breakers that worked for this user lean: question-led, specific, slightly playful.
   const contextPatterns: { keywords: string[]; ghosts: string[] }[] = [
-    { keywords: ['silence', 'quiet', 'comfortable'], ghosts: ['What\'s your idea of a perfect quiet evening?', 'I love that — what else feels effortless to you?'] },
-    { keywords: ['travel', 'trip', 'lost', 'tokyo', 'abroad', 'explore'], ghosts: ['That sounds amazing — what\'s your next destination?', 'I have a similar story! Where else have you wandered?'] },
-    { keywords: ['cook', 'fridge', 'recipe', 'meal', 'kitchen', 'food'], ghosts: ['What\'s the best thing you\'ve ever made?', 'I do the same! What\'s your go-to fridge raid dish?'] },
-    { keywords: ['hike', 'trail', 'mountain', 'outdoor', 'nature'], ghosts: ['What\'s your favorite trail so far?', 'I love hiking too — sunrise or sunset hikes?'] },
-    { keywords: ['music', 'jukebox', 'playlist', 'song', 'dj', 'vinyl'], ghosts: ['What song is on repeat for you right now?', 'What genre gets you moving?'] },
-    { keywords: ['book', 'read', 'page', 'novel', 'war and peace'], ghosts: ['What are you reading right now?', 'What book changed how you think?'] },
-    { keywords: ['philosophy', 'deep', 'conversation', 'meaning', 'life', 'tick'], ghosts: ['What\'s a question you always come back to?', 'I love deep talks too — what\'s on your mind lately?'] },
-    { keywords: ['laugh', 'funny', 'humor', 'joke', 'dark'], ghosts: ['Ha! What\'s the funniest thing that happened to you recently?', 'Love the humor — what makes you laugh the hardest?'] },
-    { keywords: ['pizza', 'restaurant', 'bar', 'dive', 'tater'], ghosts: ['Ok I need your top 3 — share the list!', 'What\'s your #1 spot right now?'] },
-    { keywords: ['game', 'scrabble', 'winning', 'streak', 'board'], ghosts: ['Challenge accepted — when and where?', 'What other games are you unbeatable at?'] },
-    { keywords: ['spreadsheet', 'ranking', 'list', 'entries'], ghosts: ['I respect the dedication! What\'s #1 on the list?', 'Can I see this spreadsheet? For research purposes.'] },
-    { keywords: ['yoga', 'meditat', 'mindful', 'phone', 'boundary'], ghosts: ['I respect that! What helps you stay present?', 'That\'s a great boundary — what inspired it?'] },
-    { keywords: ['art', 'gallery', 'museum', 'paint'], ghosts: ['What artist are you into right now?', 'What\'s the last exhibit that moved you?'] },
-    { keywords: ['wine', 'drink', 'cocktail'], ghosts: ['Red or white — what\'s your go-to?', 'What\'s the best wine you\'ve had recently?'] },
-    { keywords: ['dog', 'cat', 'pet', 'animal'], ghosts: ['What kind of pet do you have?', 'Tell me everything about your pet!'] },
-    { keywords: ['voice note', 'text', 'type', 'autocorrect'], ghosts: ['Ha, I\'m the same! What\'s your worst autocorrect moment?', 'Voice notes are underrated — what do you rant about most?'] },
-    { keywords: ['supper club', 'dinner', 'theme', 'fusion'], ghosts: ['I\'d be a regular! What theme would you start with?', 'That sounds incredible — what cuisine inspires you most?'] },
-    { keywords: ['stranger', 'friend', 'social', 'people'], ghosts: ['That\'s a superpower! What\'s your secret?', 'I love that energy — where do your best convos happen?'] },
-    { keywords: ['last meal', 'choose', 'everything about'], ghosts: ['Ok — mine would be... actually, you first!', 'Great question! What would yours be?'] },
-    { keywords: ['hidden gem', 'tour guide', 'places', 'city'], ghosts: ['I\'m intrigued — what\'s one spot I need to try?', 'Show me your favorite hidden gem!'] },
-    { keywords: ['coping', 'therapist', 'mechanism'], ghosts: ['Honestly, same — what\'s your best comfort recipe?', 'That\'s the best kind of therapy! What did you make last?'] },
-    { keywords: ['croissant', 'bakery', 'pastry', 'maman'], ghosts: ['A fellow croissant connoisseur! What makes a perfect one?', 'I have opinions on this too — compare notes?'] },
-    { keywords: ['shower thought', 'screen time', 'pet'], ghosts: ['Ha! What other shower thoughts keep you up?', 'So true — what would your pet say about you?'] },
-    { keywords: ['remember', 'book i mentioned', 'key to my heart'], ghosts: ['Ok noted — what should I read first?', 'What book has stayed with you the longest?'] },
-    { keywords: ['funeral', 'too dark', 'life\'s too short'], ghosts: ['I appreciate the honesty! What\'s your go-to dark joke?', 'Life IS too short — what else do you not take seriously?'] },
+    { keywords: ['silence', 'quiet', 'comfortable'], ghosts: ['Comfortable silence is underrated — what kind of person earns it from you?', 'Curious — what\'s the loudest room you\'ve ever felt quiet in?'] },
+    { keywords: ['travel', 'trip', 'lost', 'tokyo', 'abroad', 'explore'], ghosts: ['Ok the Tokyo story needs a sequel — what\'s the one moment you keep retelling?', 'Where\'s the next place that already feels like a future memory?'] },
+    { keywords: ['cook', 'fridge', 'recipe', 'meal', 'kitchen', 'food'], ghosts: ['Fridge-raid showdown — what\'s the dish that made you go "I\'m kind of a chef"?', 'What\'s the meal you make when you\'re trying to impress someone?'] },
+    { keywords: ['hike', 'trail', 'mountain', 'outdoor', 'nature'], ghosts: ['Trail rec swap — what\'s the one that ruined easier hikes for you?', 'Sunrise summit or sunset descent — and why is it sunrise?'] },
+    { keywords: ['music', 'jukebox', 'playlist', 'song', 'dj', 'vinyl'], ghosts: ['Jukebox question: the one song that\'s embarrassingly on repeat right now?', 'What\'s the song you put on when you want to feel like the main character?'] },
+    { keywords: ['book', 'read', 'page', 'novel', 'war and peace'], ghosts: ['What\'s the book you push on people whether they asked or not?', 'Last book that made you text someone at 1am about it?'] },
+    { keywords: ['philosophy', 'deep', 'conversation', 'meaning', 'life', 'tick'], ghosts: ['What\'s the question you keep circling back to lately?', 'If we skipped small talk — what\'s actually on your mind this week?'] },
+    { keywords: ['laugh', 'funny', 'humor', 'joke', 'dark'], ghosts: ['Top contender for funniest thing that\'s happened to you this month — go.', 'What\'s the joke that you think is hilarious but no one else gets?'] },
+    { keywords: ['pizza', 'restaurant', 'bar', 'dive', 'tater'], ghosts: ['Need the top 3 — and the one you\'d defend in a fight.', 'Best dive bar you\'ve ever loved and why was it that one?'] },
+    { keywords: ['game', 'scrabble', 'winning', 'streak', 'board'], ghosts: ['Scrabble challenge accepted — loser buys the first round?', 'What\'s the game where you\'re quietly terrifying?'] },
+    { keywords: ['spreadsheet', 'ranking', 'list', 'entries'], ghosts: ['I need the spreadsheet, the criteria, AND the current #1.', 'What earned the top spot — and what got unfairly snubbed?'] },
+    { keywords: ['yoga', 'meditat', 'mindful', 'phone', 'boundary'], ghosts: ['What\'s the boundary you set that quietly changed everything?', 'What does an actually-good morning look like for you?'] },
+    { keywords: ['art', 'gallery', 'museum', 'paint'], ghosts: ['What\'s the last piece that genuinely stopped you in a gallery?', 'Which artist do you bring up uninvited at parties?'] },
+    { keywords: ['wine', 'drink', 'cocktail'], ghosts: ['What\'s your "I know what I\'m doing" order at a bar?', 'Best bottle you\'ve had recently — and what was the occasion?'] },
+    { keywords: ['dog', 'cat', 'pet', 'animal'], ghosts: ['Ok — name, breed, and one weirdly specific personality trait.', 'What would your pet say about you in a Hinge prompt?'] },
+    { keywords: ['voice note', 'text', 'type', 'autocorrect'], ghosts: ['Voice note rant topic of choice — go.', 'What\'s your most unhinged autocorrect moment?'] },
+    { keywords: ['supper club', 'dinner', 'theme', 'fusion'], ghosts: ['Pitch me the first supper club theme — I\'m booking.', 'What cuisine would you build a whole night around?'] },
+    { keywords: ['stranger', 'friend', 'social', 'people'], ghosts: ['What\'s the best conversation you\'ve had with a stranger?', 'Where do your most unexpectedly good convos happen?'] },
+    { keywords: ['last meal', 'choose', 'everything about'], ghosts: ['Last meal — full menu, no diplomatic answers.', 'You first — what\'s on the plate and who\'s at the table?'] },
+    { keywords: ['hidden gem', 'tour guide', 'places', 'city'], ghosts: ['Drop one hidden gem you\'d gatekeep from anyone else.', 'If I had 24 hours, where are you actually taking me?'] },
+    { keywords: ['coping', 'therapist', 'mechanism'], ghosts: ['What\'s the comfort dish that does the actual work?', 'What\'s the most underrated form of self-care, in your opinion?'] },
+    { keywords: ['croissant', 'bakery', 'pastry', 'maman'], ghosts: ['Settle a debate — what makes a croissant truly elite?', 'Best croissant in the city — defend your pick.'] },
+    { keywords: ['shower thought', 'screen time', 'pet'], ghosts: ['What\'s the shower thought that derailed your week?', 'Drop your best one — I\'ll counter with mine.'] },
+    { keywords: ['remember', 'book i mentioned', 'key to my heart'], ghosts: ['Noted — but tell me which one to actually start with.', 'Which book do I read first to pass the vibe check?'] },
+    { keywords: ['funeral', 'too dark', 'life\'s too short'], ghosts: ['What\'s the dark joke you\'re weirdly proud of?', 'What else are you refusing to take seriously?'] },
   ];
 
   for (const pattern of contextPatterns) {
@@ -268,8 +270,8 @@ export function generateGhostText(sharedInterests: string[], promptAnswer: strin
   }
 
   if (sharedInterests.length > 0) {
-    return `I'm into ${sharedInterests[0]} too — tell me more!`;
+    return `We\'re both into ${sharedInterests[0]} — what got you started?`;
   }
 
-  return 'You have something in common — say hi!';
+  return 'What\'s the story behind this one?';
 }
