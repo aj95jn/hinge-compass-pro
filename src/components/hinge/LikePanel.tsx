@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Info } from 'lucide-react';
 import { Profile } from '@/types';
-import { analyzeMessage, CoachNudge, generateEmptyLikeSuggestion } from '@/lib/messageCoach';
+import { analyzeMessage, CoachNudge, generateEmptyLikeSuggestion, LikeTarget } from '@/lib/messageCoach';
 import { MessageCoachNudge } from './MessageCoachNudge';
 import { EmptyLikePreSendCard } from './EmptyLikePreSendCard';
 
@@ -14,6 +14,7 @@ interface LikePanelProps {
   isPaid: boolean;
   recipientProfile: Profile;
   userProfile?: Profile;
+  likeTarget?: LikeTarget;
   onSend: (message: string, isRose: boolean, isPriority: boolean) => void;
   onCancel: () => void;
 }
@@ -25,6 +26,7 @@ export function LikePanel({
   isPaid,
   recipientProfile,
   userProfile,
+  likeTarget,
   onSend,
   onCancel,
 }: LikePanelProps) {
@@ -40,10 +42,10 @@ export function LikePanel({
 
   const wordCount = message.trim() ? message.trim().split(/\s+/).length : 0;
 
-  // Pre-computed empty-like suggestion (specific to this profile + user history)
+  // Pre-computed empty-like suggestion — prompt-specific + profile-wide
   const emptyLikeSuggestion = useMemo(
-    () => generateEmptyLikeSuggestion(recipientProfile, userProfile),
-    [recipientProfile, userProfile]
+    () => generateEmptyLikeSuggestion(recipientProfile, userProfile, undefined, likeTarget),
+    [recipientProfile, userProfile, likeTarget]
   );
 
   // Close tooltip on outside click
