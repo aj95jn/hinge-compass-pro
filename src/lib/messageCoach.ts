@@ -359,46 +359,41 @@ export function generateEmptyLikeSuggestion(
 ): EmptyLikeSuggestion {
   const name = recipientProfile.name;
   const signature = getProfileSignature(recipientProfile);
-  const signatureDesc = getSignatureDescriptor(signature);
   const interests = recipientProfile.preferences || [];
   const sharedInterests = userProfile
     ? interests.filter(i => (userProfile.preferences || []).includes(i))
     : [];
 
-  // Find the richest prompt to anchor on
   const richPrompt = recipientProfile.prompts.find(p => p.interests && p.interests.length > 0)
     || recipientProfile.prompts[0];
-
-  const profileRate = Math.round((history.repliesWhenReferencingProfile ?? 0.71) * 100);
+  const promptTopic = richPrompt?.interests?.[0] || sharedInterests[0] || interests[0];
+  const bestStyle = history.bestPerformingStyle;
 
   const starters: string[] = [];
 
-  if (richPrompt) {
-    const topic = richPrompt.interests?.[0] || sharedInterests[0] || interests[0];
-    if (topic) {
-      starters.push(`Ask about her "${richPrompt.question.toLowerCase()}" — specifically the ${topic} angle`);
-    } else {
-      starters.push(`React to her "${richPrompt.question.toLowerCase()}" with a follow-up question`);
-    }
+  // Starter 1 — anchor on her richest prompt with a specific angle
+  if (richPrompt && promptTopic) {
+    starters.push(`Riff on her "${richPrompt.question.toLowerCase()}" — go specific on ${promptTopic}.`);
+  } else if (richPrompt) {
+    starters.push(`React to her "${richPrompt.question.toLowerCase()}" with one sharp follow-up.`);
   }
 
-  if (sharedInterests.length > 0) {
-    starters.push(`Lead with your shared ${sharedInterests[0]} — common ground unlocks faster replies`);
-  } else if (interests.length > 0) {
-    starters.push(`Ask what got her into ${interests[0]}`);
-  }
-
-  if (signature === 'depth-seeker' || signature === 'intellectual') {
-    starters.push(`Match her depth — a thoughtful question lands better than a compliment`);
+  // Starter 2 — tailored to her signature + your best style
+  if (sharedInterests.length > 0 && bestStyle === 'question-led') {
+    starters.push(`Ask one curious question about your shared ${sharedInterests[0]} — your strongest pattern.`);
+  } else if (signature === 'depth-seeker' || signature === 'intellectual') {
+    starters.push(`Skip the small talk — a thoughtful question lands with ${name}.`);
   } else if (signature === 'playful') {
-    starters.push(`Match her humor — a witty callback to her prompt works`);
+    starters.push(`Match her humor — a witty callback to her prompt beats a compliment.`);
   } else if (signature === 'adventurous') {
-    starters.push(`Trade a story — adventurous profiles open up to specific experiences`);
+    starters.push(`Trade a quick story tied to her ${promptTopic || 'prompt'}.`);
+  } else if (sharedInterests.length > 0) {
+    starters.push(`Lead with your shared ${sharedInterests[0]}.`);
   }
 
   return {
-    headline: `Add a note — ${name}'s profile rewards ${signatureDesc}`,
-    detail: `Likes with messages get ~3× more replies. Yours go to ${profileRate}% when you reference the profile.`,
-    starters: starters.slice(0, 3),
+    headline: `Likes with messages get 3× more replies`,
+    detail: '',
+    starters: starters.slice(0, 2),
   };
 }
