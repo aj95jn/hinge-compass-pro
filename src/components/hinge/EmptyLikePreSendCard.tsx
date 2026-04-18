@@ -23,9 +23,11 @@ export function EmptyLikePreSendCard({ suggestion, onAddMessage, onSkip }: Empty
           <p className="text-sm font-semibold text-foreground leading-snug">
             {suggestion.headline}
           </p>
-          <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
-            {suggestion.detail}
-          </p>
+          {suggestion.detail && (
+            <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
+              {suggestion.detail}
+            </p>
+          )}
         </div>
       </div>
 
