@@ -352,48 +352,131 @@ export interface EmptyLikeSuggestion {
   starters: string[]; // 1-3 concrete opener directions
 }
 
+// Target the user is liking on — required for prompt-specific starter #1
+export interface LikeTarget {
+  type: 'photo' | 'prompt';
+  index: number;
+}
+
+// Pull the most evocative noun/phrase from a prompt answer
+function extractAnswerHook(answer: string): string {
+  if (!answer) return '';
+  const cleaned = answer.replace(/[""''.!?]/g, '').trim();
+  // Prefer the first meaningful clause
+  const firstClause = cleaned.split(/[,;:—-]/)[0].trim();
+  const words = firstClause.split(/\s+/);
+  if (words.length <= 6) return firstClause.toLowerCase();
+  return words.slice(0, 6).join(' ').toLowerCase() + '…';
+}
+
+// Build a starter specific to ONE prompt — angle, question, or observation
+function buildPromptSpecificStarter(
+  prompt: { question: string; answer: string; interests?: string[] },
+  signature: ProfileSignature,
+): string {
+  const topic = prompt.interests?.[0];
+  const hook = extractAnswerHook(prompt.answer);
+  const q = prompt.question.toLowerCase().replace(/[?.]$/, '');
+
+  if (topic && hook) {
+    if (signature === 'depth-seeker' || signature === 'intellectual') {
+      return `Ask what drew her to ${topic} specifically — her "${hook}" line invites depth.`;
+    }
+    if (signature === 'playful') {
+      return `Playfully challenge her "${hook}" take — keep it light, tied to ${topic}.`;
+    }
+    if (signature === 'adventurous') {
+      return `Swap a quick ${topic} story sparked by "${hook}".`;
+    }
+    return `React to "${hook}" with a sharp follow-up about ${topic}.`;
+  }
+  if (hook) {
+    return `Pick up on "${hook}" — ask the one thing her answer leaves unsaid.`;
+  }
+  return `React to her "${q}" with a curious, specific question.`;
+}
+
+// Build a starter specific to OVERALL profile — shared values, common ground, other prompts
+function buildProfileWideStarter(
+  recipientProfile: Profile,
+  excludePromptId: string | undefined,
+  userProfile: Profile | undefined,
+  signature: ProfileSignature,
+  history: UserHistorySignals,
+): string {
+  const name = recipientProfile.name;
+  const interests = recipientProfile.preferences || [];
+  const shared = userProfile
+    ? interests.filter(i => (userProfile.preferences || []).includes(i))
+    : [];
+
+  // Prefer a different prompt than the one being liked, with rich content
+  const otherPrompt = recipientProfile.prompts.find(
+    p => p.id !== excludePromptId && p.interests && p.interests.length > 0,
+  ) || recipientProfile.prompts.find(p => p.id !== excludePromptId);
+
+  if (shared.length >= 2) {
+    return `Common ground: ${shared.slice(0, 2).join(' + ')} — open with what you've actually done in one of those.`;
+  }
+  if (shared.length === 1 && history.bestPerformingStyle === 'question-led') {
+    return `You both list ${shared[0]} — your replies spike when you ask, not tell.`;
+  }
+  if (shared.length === 1) {
+    return `Shared interest: ${shared[0]} — anchor your message there, not on her photos.`;
+  }
+  if (otherPrompt && otherPrompt.interests?.[0]) {
+    return `Elsewhere on her profile she mentions ${otherPrompt.interests[0]} — bridge to it.`;
+  }
+  if (otherPrompt) {
+    const otherHook = extractAnswerHook(otherPrompt.answer);
+    return `Her "${otherHook}" line elsewhere is the strongest hook — reference it.`;
+  }
+  if (signature === 'depth-seeker' || signature === 'intellectual') {
+    return `${name}'s profile reads thoughtful — a values question outperforms a compliment.`;
+  }
+  if (signature === 'playful') {
+    return `Her overall tone is playful — match it; skip the earnest opener.`;
+  }
+  return `Reference something concrete from her wider profile — generic openers stall.`;
+}
+
 export function generateEmptyLikeSuggestion(
   recipientProfile: Profile,
   userProfile?: Profile,
   history: UserHistorySignals = DEFAULT_USER_HISTORY,
+  target?: LikeTarget,
 ): EmptyLikeSuggestion {
-  const name = recipientProfile.name;
   const signature = getProfileSignature(recipientProfile);
-  const interests = recipientProfile.preferences || [];
-  const sharedInterests = userProfile
-    ? interests.filter(i => (userProfile.preferences || []).includes(i))
-    : [];
 
-  const richPrompt = recipientProfile.prompts.find(p => p.interests && p.interests.length > 0)
-    || recipientProfile.prompts[0];
-  const promptTopic = richPrompt?.interests?.[0] || sharedInterests[0] || interests[0];
-  const bestStyle = history.bestPerformingStyle;
+  // Resolve which prompt this like is on (if any)
+  const likedPrompt =
+    target?.type === 'prompt' ? recipientProfile.prompts[target.index] : undefined;
 
   const starters: string[] = [];
 
-  // Starter 1 — anchor on her richest prompt with a specific angle
-  if (richPrompt && promptTopic) {
-    starters.push(`Riff on her "${richPrompt.question.toLowerCase()}" — go specific on ${promptTopic}.`);
-  } else if (richPrompt) {
-    starters.push(`React to her "${richPrompt.question.toLowerCase()}" with one sharp follow-up.`);
+  // Starter 1 — specific to the EXACT prompt being liked
+  if (likedPrompt) {
+    starters.push(buildPromptSpecificStarter(likedPrompt, signature));
+  } else if (target?.type === 'photo') {
+    // Like is on a photo — anchor first starter on the photo's shared tags / her richest prompt
+    const richPrompt = recipientProfile.prompts.find(p => p.interests && p.interests.length > 0)
+      || recipientProfile.prompts[0];
+    if (richPrompt) {
+      starters.push(buildPromptSpecificStarter(richPrompt, signature));
+    }
+  } else {
+    const richPrompt = recipientProfile.prompts[0];
+    if (richPrompt) starters.push(buildPromptSpecificStarter(richPrompt, signature));
   }
 
-  // Starter 2 — tailored to her signature + your best style
-  if (sharedInterests.length > 0 && bestStyle === 'question-led') {
-    starters.push(`Ask one curious question about your shared ${sharedInterests[0]} — your strongest pattern.`);
-  } else if (signature === 'depth-seeker' || signature === 'intellectual') {
-    starters.push(`Skip the small talk — a thoughtful question lands with ${name}.`);
-  } else if (signature === 'playful') {
-    starters.push(`Match her humor — a witty callback to her prompt beats a compliment.`);
-  } else if (signature === 'adventurous') {
-    starters.push(`Trade a quick story tied to her ${promptTopic || 'prompt'}.`);
-  } else if (sharedInterests.length > 0) {
-    starters.push(`Lead with your shared ${sharedInterests[0]}.`);
-  }
+  // Starter 2 — specific to OVERALL profile / shared values / past patterns
+  starters.push(
+    buildProfileWideStarter(recipientProfile, likedPrompt?.id, userProfile, signature, history),
+  );
 
   return {
     headline: `Likes with messages get 3× more replies`,
     detail: '',
-    starters: starters.slice(0, 2),
+    starters: starters.filter(Boolean).slice(0, 2),
   };
 }

@@ -259,6 +259,7 @@ export function ProfileCard({
               isPaid={isPaid}
               recipientProfile={profile}
               userProfile={userProfile}
+              likeTarget={selectedTarget ?? undefined}
               onSend={handleLikeSend}
               onCancel={() => setSelectedTarget(null)}
             />
